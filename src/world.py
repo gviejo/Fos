@@ -293,7 +293,7 @@ class Maze:
     
     self.nbTransitionsMax = 57
 
-#-----------------------------------------
+  #-----------------------------------------
   ## Construit le TYM
   def setTYMStructure(self):
     self.root = "1a"
@@ -331,9 +331,9 @@ class Maze:
     
     self.nbTransitionsMax = 38
 
-#-----------------------------------------
+  #-----------------------------------------
 
- ## Construit la version 2 couloirs pour les contrôles nage Fos
+  ## Construit la version 2 couloirs pour les contrôles nage Fos
   def set2alleysStructure(self):
     self.root = "1a"
 
@@ -353,9 +353,9 @@ class Maze:
     self.nbTransitionsMax = 38
 
 
-#-----------------------------------------
+  #-----------------------------------------
 
-## Ancienne version du starmaze
+  ## Ancienne version du starmaze
   ## Ancienne version du starmaze
   def setOldStarStructure(self):
     self.root = "1a"
@@ -507,7 +507,7 @@ class World:
   # d'aller tout droit, de tourner à gauche, de faire demi-tour et de
   # tourner à droite
   def readPathwaysALaLouche(self,referentiel='ego'):
-    pathways = [0,0,0,0]
+    pathways = np.zeros(4)
     if referentiel == 'ego':
       if self.mouseDir%self.M.camDef in self.M.Ns[self.mousePos].alleys:
         pathways[0]=1

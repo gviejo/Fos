@@ -13,21 +13,19 @@ import sys, os
 
 states = np.array(['I', 'Y', 'U'])
 actions = np.array(['F', 'L', 'U', 'R'])
-known = dict({	'I':np.array([0,2]),
-				'Y':np.array([1,2,3]),
-				'U':np.array([2]) })
+
 
 class VMWM():
 	""" from B. Babayan thesis
 	"""
 
-	def __init__(self, parameters = {'length':3}, sferes = False):
+	def __init__(self, parameters = {'length':3}):
 		# Parameters
-		self.sferes = sferes
 		self.parameters = parameters
+		self.parameters['length'] = int(self.parameters['length'])
 		self.n_action = len(actions)
 		self.n_state = len(states)
-		self.n_possible = self.n_state*np.sum(map(lambda x:self.n_action**x, range(self.n_action)))
+		self.n_possible = self.n_state*np.sum(map(lambda x:self.n_action**x, range(self.parameters['length']+1)))
 		self.bounds = dict({"length":[0,3],
 							"gamma":[0.0, 1.0],
 							"beta":[0.0, 100.0],
@@ -40,6 +38,7 @@ class VMWM():
 		self.current_state = None
 		self.current_action = None
 		self.last_actions = np.array(['']*self.parameters['length'])
+		self.ind = np.arange(self.n_action)
 		# Conversion Init				
 		self.convert = dict()
 		self.keys = []		
@@ -77,7 +76,7 @@ class VMWM():
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
 		if np.isinf(tmp).sum():
-			self.p_a = np.isinf(self.p_a)*0.9999995+0.0000001            
+			self.p_a = np.isinf(self.p_a)*0.9999996+0.0000001            
 		else :
 			self.p_a = tmp/np.sum(tmp)           
 		return tmp/float(np.sum(tmp))
@@ -85,28 +84,37 @@ class VMWM():
 	def sampleSoftMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
 		if np.isinf(tmp).sum():
-			tmp = np.isinf(self.p_a)*0.9999995+0.0000001
+			tmp = np.isinf(self.p_a)*0.9999996+0.0000001
 		else :
 			tmp = tmp/float(np.sum(tmp))
 		tmp = [np.sum(tmp[0:i]) for i in range(len(tmp))]
 		return np.sum(np.array(tmp) < np.random.rand())-1 
 
-	def computeValue(self, s, a, ind):
-		pass
-
-	def chooseAction(self, state):
+	def computeValue(self, state, a, possible):
+		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
 		self.current_state = self.convert[state+"".join(self.last_actions)]
-		self.actor[self.current_state] = np.arange(4)
-		q_values = self.actor[self.current_state][known[state]]		
-		self.current_action = known[state][self.sampleSoftMax(q_values)]
+		self.current_action = a
+		ind = self.ind[possible==1]
+		q_values = self.actor[self.current_state][possible==1]
+		p_a = np.zeros(self.n_action)
+		p_a[ind] = self.softMax(q_values)
+		return p_a[self.current_action]
+
+	def chooseAction(self, state, possible):
+		self.current_state = self.convert[state+"".join(self.last_actions)]
+		ind = self.ind[possible==1]
+		q_values = self.actor[self.current_state][possible==1]		
+		self.current_action = ind[self.sampleSoftMax(q_values)]
 		return actions[self.current_action]		
 
 	def updateValue(self, reward, next_state):
 		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0		        
-		# Delta update
-		self.delta = r + self.parameters['gamma']*self.critic[self.convert[next_state]] - self.critic[self.current_state]
-		self.critic[self.current_state] += (self.parameters['eta']*self.delta)
-		self.actor[self.current_state, self.current_action] += (self.parameters['eta']*self.delta)
 		# Update list of previous action
 		self.last_actions[1:] = self.last_actions[:-1]
 		self.last_actions[0] = actions[self.current_action]		
+		# Delta update
+		n_s = self.convert[next_state+"".join(self.last_actions)]
+		self.delta = r + self.parameters['gamma']*self.critic[n_s] - self.critic[self.current_state]
+		self.critic[self.current_state] += (self.parameters['eta']*self.delta)
+		self.actor[self.current_state, self.current_action] += (self.parameters['eta']*self.delta)
+
