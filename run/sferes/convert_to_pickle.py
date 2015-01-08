@@ -24,10 +24,14 @@ pos_to_state = dict({	'1a':'U',
 					   	'4' :'I',
 					   	'IV':'U'})
 actions = ['F', 'L', 'U', 'R']
-files = os.listdir("/home/viejo/Benedicte/data")
 
-for f in files:
-	data = np.loadtxt("/home/viejo/Benedicte/data/"+f)
+all_mice = [i.split(".")[0] for i in os.listdir("/home/viejo/Benedicte/data")]
+# few_mice = ['B28','B61','B137','B155','B163','B166','B150','B62','B76','B84','B139','B154','B74','B86','B152']
+# list_mice = [i for i in all_mice if i.split("_")[0] in few_mice]
+
+
+for f in all_mice:
+	data = np.loadtxt("/home/viejo/Benedicte/data/"+f+".txt")
 	nb_trials = len(np.unique(data[:,0]))
 	nb_point = 0
 	pick = {}
