@@ -63,11 +63,19 @@ class TYMaze():
 		for i in xrange(nb_trial):
 			for j in xrange(len(data[i]['action'])):
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])
+				
+				# print np.log(pa)
+				
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
 				loglike[data[i]['ind'][j]] = np.log(pa)
+
 			if data[i]['reward'][-1] == 0:
 				self.guidage()
-		return np.sum(loglike)
+		llh = np.sum(loglike)
+		if int(llh)==0:
+			return -100000
+		else:
+			return np.sum(loglike)
 		
 	def test(self, nb_exp):
 		for n in xrange(nb_exp):

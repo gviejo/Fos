@@ -28,7 +28,7 @@ class VMWM():
 		self.n_possible = self.n_state*np.sum(map(lambda x:self.n_action**x, range(self.parameters['length']+1)))
 		self.bounds = dict({"length":[0,3],
 							"gamma":[0.0, 0.9999999999],
-							"beta":[0.0, 100.0],
+							"beta":[0.0, 20.0],
 							"eta":[0.0, 0.99999999999]})
 		self.delta = 0.0		
 		# Values initialization		
@@ -96,8 +96,8 @@ class VMWM():
 		self.current_action = a
 		ind = self.ind[possible==1]
 		q_values = self.actor[self.current_state][possible==1]
-		p_a = np.zeros(self.n_action)
-		p_a[ind] = self.softMax(q_values)
+		p_a = np.zeros(self.n_action)		
+		p_a[ind] = self.softMax(q_values)		
 		return p_a[self.current_action]
 
 	def chooseAction(self, state, possible):
