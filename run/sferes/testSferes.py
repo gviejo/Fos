@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys, os
-sys.path.append("../src/")
+sys.path.append("../../src/")
 import numpy as np
 from manip import Manip
 from matplotlib import *

@@ -32,8 +32,10 @@ class VMWM():
 							"eta":[0.0, 0.99999999999]})
 		self.delta = 0.0		
 		# Values initialization		
-		self.critic	= np.ones(self.n_possible)*0.1
-		self.actor = np.ones((self.n_possible, self.n_action))*0.1
+		# self.critic	= np.ones(self.n_possible)*0.1
+		# self.actor = np.ones((self.n_possible, self.n_action))*0.1
+		self.critic	= np.zeros(self.n_possible)
+		self.actor = np.zeros((self.n_possible, self.n_action))
 		#Various Init
 		self.current_state = None
 		self.current_action = None

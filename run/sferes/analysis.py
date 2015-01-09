@@ -48,7 +48,7 @@ with open("parameters.pickle", 'wb') as f:
 with open("parameters.txt", 'w') as f:
 	m = 'VMWM'
 	for s in front.best['VMWM'].keys():
-		line="mouse="+s+"\t"+" \t ".join([k+"="+str(front.best[m][s][k]) for k in ['beta','eta','gamma']])+"\t\tloglikelihood = "+str(front.best_log[m][s])+"\n"		
+		line="mouse="+s.split("_")[0]+"\t"+" \t ".join([k+"="+str(front.best[m][s][k]) for k in ['beta','eta','gamma']])+"\t\tloglikelihood = "+str(front.best_log[m][s])+"\n"		
 		f.write(line)
 
 # all_mice = np.array([i.split(".")[0] for i in os.listdir("../../data/")])

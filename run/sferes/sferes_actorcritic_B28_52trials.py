@@ -6,19 +6,24 @@ sys.path.append("../../src/")
 from Wrap import TYMaze
 from Models import VMWM
 import cPickle as pickle
-parser = OptionParser()                                                             
-parser.add_option("-b", "--beta", action="store", type = 'float')
-parser.add_option("-g", "--gamma", action="store", type = 'float')
-parser.add_option("-e", "--eta", action="store", type = 'float')
-parser.add_option("-n", "--length", action="store", type = 'float')
-(options, args) = parser.parse_args()
-with open("../../data/B28_52trials.pickle") as f:
+# parser = OptionParser()                                                             
+# parser.add_option("-b", "--beta", action="store", type = 'float')
+# parser.add_option("-g", "--gamma", action="store", type = 'float')
+# parser.add_option("-e", "--eta", action="store", type = 'float')
+# parser.add_option("-n", "--length", action="store", type = 'float')
+# (options, args) = parser.parse_args()
+with open("../../data/B163_52trials.pickle") as f:
 	data = pickle.load(f)
-model = VMWM()
-parameters = vars(options)
-for p in parameters.iterkeys():                                                                                                                   
-    if parameters[p] is not None:
-        parameters[p] = model.bounds[p][0]+parameters[p]*(model.bounds[p][1]-model.bounds[p][0])
+# model = VMWM()
+# parameters = vars(options)
+# for p in parameters.iterkeys():                                                                                                                   
+#     if parameters[p] is not None:
+#         parameters[p] = model.bounds[p][0]+parameters[p]*(model.bounds[p][1]-model.bounds[p][0])
+# parameters['length'] = 3
+parameters = {'beta':5.459,
+			'eta':0.134,
+			'gamma':0.909,
+			'length':3}			
 model = VMWM(parameters)
 opt = TYMaze(model)
 llh = opt.sferes(data)
