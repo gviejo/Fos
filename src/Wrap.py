@@ -78,10 +78,11 @@ class TYMaze():
 		else:
 			return np.sum(loglike)
 		
-	def test(self, nb_exp):
+	def test(self, parameters, nb_exp, nb_trials):
+		self.model.__init__(parameters)
 		for n in xrange(nb_exp):
 			self.model.startExp()
-			for i in xrange(self.nb_trials_max):			
+			for i in xrange(nb_trials):			
 				self.reward_found = False		
 				self.world.startingPos()
 				state = self.pos_to_state[self.world.mousePos]				

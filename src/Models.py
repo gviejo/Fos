@@ -26,7 +26,7 @@ class VMWM():
 		self.n_action = len(actions)
 		self.n_state = len(states)
 		self.n_possible = self.n_state*np.sum(map(lambda x:self.n_action**x, range(self.parameters['length']+1)))
-		self.bounds = dict({"length":[0,3],
+		self.bounds = dict({"length":[0,3.9],
 							"gamma":[0.0, 0.9999999999],
 							"beta":[0.0, 50.0],
 							"eta":[0.0, 0.99999999999]})
