@@ -72,8 +72,10 @@ class VMWM():
 				self.setParameters(i, parameters[i])
 
 	def startExp(self):
-		self.critic	= np.ones(self.n_possible)*0.1
-		self.actor = np.ones((self.n_possible, self.n_action))*0.1
+		# self.critic	= np.ones(self.n_possible)*0.1
+		# self.actor = np.ones((self.n_possible, self.n_action))*0.1
+		self.critic	= np.zeros(self.n_possible)
+		self.actor = np.zeros((self.n_possible, self.n_action))
 
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
