@@ -12,7 +12,7 @@ import cPickle as pickle
 # parser.add_option("-e", "--eta", action="store", type = 'float')
 # parser.add_option("-n", "--length", action="store", type = 'float')
 # (options, args) = parser.parse_args()
-with open("../../data/B163_52trials.pickle") as f:
+with open("../../data/B154_68trials.pickle") as f:
 	data = pickle.load(f)
 # model = VMWM()
 # parameters = vars(options)
@@ -20,9 +20,9 @@ with open("../../data/B163_52trials.pickle") as f:
 #     if parameters[p] is not None:
 #         parameters[p] = model.bounds[p][0]+parameters[p]*(model.bounds[p][1]-model.bounds[p][0])
 # parameters['length'] = 3
-parameters = {'beta':5.459,
-			'eta':0.134,
-			'gamma':0.909,
+parameters = {'beta':50.0,
+			'eta':0.99999999999,
+			'gamma':0.99999999999,
 			'length':3}			
 model = VMWM(parameters)
 opt = TYMaze(model)

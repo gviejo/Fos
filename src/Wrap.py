@@ -55,6 +55,7 @@ class TYMaze():
 			self.model.updateValue(self.reward_guiding[i], self.states[self.state_guiding[i+1]])
 
 	def sferes(self, data):
+		np.seterr(all='ignore')
 		nb_point = data['info']['nb_point']
 		nb_trial = data['info']['nb_trial']
 		loglike = np.zeros(nb_point)
@@ -72,7 +73,7 @@ class TYMaze():
 			if data[i]['reward'][-1] == 0:
 				self.guidage()
 		llh = np.sum(loglike)
-		if int(llh)==0 or np.isnan(llh):
+		if llh==0 or np.isnan(llh) or np.isinf(llh):
 			return -100000
 		else:
 			return np.sum(loglike)

@@ -80,17 +80,17 @@ class VMWM():
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
 		# if np.isinf(tmp).sum():
-		# 	self.p_a = np.isinf(self.p_a)*0.9999996+0.0000001            
+		# 	tmp = np.isinf(tmp)*0.9999996+0.0000001            
 		# else :
 		# 	self.p_a = tmp/np.sum(tmp)           
 		return tmp/float(np.sum(tmp))
 
 	def sampleSoftMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
-		if np.isinf(tmp).sum():
-			tmp = np.isinf(self.p_a)*0.9999996+0.0000001
-		else :
-			tmp = tmp/float(np.sum(tmp))
+		# if np.isinf(tmp).sum():
+		# 	tmp = np.isinf(self.p_a)*0.9999996+0.0000001
+		# else :
+		tmp = tmp/float(np.sum(tmp))
 		tmp = [np.sum(tmp[0:i]) for i in range(len(tmp))]
 		return np.sum(np.array(tmp) < np.random.rand())-1 
 
