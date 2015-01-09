@@ -28,7 +28,7 @@ class VMWM():
 		self.n_possible = self.n_state*np.sum(map(lambda x:self.n_action**x, range(self.parameters['length']+1)))
 		self.bounds = dict({"length":[0,3],
 							"gamma":[0.0, 0.9999999999],
-							"beta":[0.0, 20.0],
+							"beta":[0.0, 50.0],
 							"eta":[0.0, 0.99999999999]})
 		self.delta = 0.0		
 		# Values initialization		
@@ -77,10 +77,10 @@ class VMWM():
 
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
-		if np.isinf(tmp).sum():
-			self.p_a = np.isinf(self.p_a)*0.9999996+0.0000001            
-		else :
-			self.p_a = tmp/np.sum(tmp)           
+		# if np.isinf(tmp).sum():
+		# 	self.p_a = np.isinf(self.p_a)*0.9999996+0.0000001            
+		# else :
+		# 	self.p_a = tmp/np.sum(tmp)           
 		return tmp/float(np.sum(tmp))
 
 	def sampleSoftMax(self, values):

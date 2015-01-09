@@ -72,7 +72,7 @@ class TYMaze():
 			if data[i]['reward'][-1] == 0:
 				self.guidage()
 		llh = np.sum(loglike)
-		if int(llh)==0:
+		if int(llh)==0 or np.isnan(llh):
 			return -100000
 		else:
 			return np.sum(loglike)
