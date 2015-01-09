@@ -114,8 +114,9 @@ class VMWM():
 	def updateValue(self, reward, next_state):
 		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0		        
 		# Update list of previous action
-		self.last_actions[1:] = self.last_actions[:-1]
-		self.last_actions[0] = actions[self.current_action]		
+		if self.parameters['length']:
+			self.last_actions[1:] = self.last_actions[:-1]
+			self.last_actions[0] = actions[self.current_action]
 		# Delta update
 		n_s = self.convert[next_state+"".join(self.last_actions)]
 		self.delta = r + self.parameters['gamma']*self.critic[n_s] - self.critic[self.current_state]
