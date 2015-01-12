@@ -20,6 +20,7 @@ from Models import *
 if os.uname()[1] in ['atlantis', 'paradise']:
     from multiprocessing import Pool, Process
     from pylab import *
+    import cPickle as pickle
 
 
 def unwrap_self_load_data(arg, **kwarg):
@@ -36,8 +37,8 @@ class pareto():
         self.directory = directory
         self.data = dict()
         self.models = dict({"VMWM":VMWM()})
-        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta']})
-        # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})
+        # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta']})
+        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})
         self.m_order = ['VMWM']
         self.best = dict() # the best parameters set for each mouse        
         self.best_log = dict()
@@ -161,7 +162,16 @@ class pareto():
                 self.best[m][s] = {p:self.data[m][s][best_ind,5+self.p_order[m].index(p)] for p in self.p_order[m]}
                 self.best_log[m][s] = self.data[m][s][best_ind,3]        
             
-        
+    def write(self, name):
+        with open(name+"_parameters.pickle", 'wb') as f:
+            pickle.dump(self.best, f)
+        with open(name+"_parameters.txt", 'w') as f:
+            for m in self.best.keys():
+                for s in self.best[m].keys():
+                    line="mouse="+s.split("_")[0]+"\t"
+                    line += " \t ".join([k+"="+str(self.best[m][s][k]) for k in self.p_order[m]])
+                    line += "\t\tloglikelihood = "+str(self.best_log[m][s])+"\n"
+                    f.write(line)
         
 
 

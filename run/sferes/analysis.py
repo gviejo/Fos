@@ -41,18 +41,8 @@ front = pareto(options.input)
 # front.extractFrontLimits()
 # front.plotEvolution()
 front.extractBestLog()
+front.write(options.input)
 
-with open("parameters.pickle", 'wb') as f:
-	pickle.dump(front.best, f)
-with open("parameters.txt", 'w') as f:
-	m = 'VMWM'
-	for s in front.best['VMWM'].keys():
-		line="mouse="+s.split("_")[0]+"\t"+" \t ".join([k+"="+str(front.best[m][s][k]) for k in ['beta','eta','gamma', 'length']])+"\t\tloglikelihood = "+str(front.best_log[m][s])+"\n"		
-		f.write(line)
-
-# all_mice = np.array([i.split(".")[0] for i in os.listdir("../../data/")])
-# few_mice = np.array(['B28','B61','B137','B155','B163','B166','B150','B62','B84','B139','B154','B74','B86','B152'])
-# list_mice = np.array([i for i in all_mice if i.split("_")[0] in few_mice])
 
 
 sys.exit()

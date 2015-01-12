@@ -8,8 +8,13 @@ For guidage, reward delivery, maze structure, ...
 """
 
 import numpy as np
-import sys, os
+import os
 from world import World
+from matplotlib import *
+from pylab import *
+if os.uname()[1] in ['atlantis', 'paradise']:
+    from pylab import *    
+
 
 class TYMaze():
 	""" from B. Babayan thesis
@@ -60,7 +65,7 @@ class TYMaze():
 		nb_trial = data['info']['nb_trial']
 		loglike = np.zeros(nb_point)
 		self.model.startExp()
-		self.world
+		self.world.startingPos()
 		for i in xrange(nb_trial):
 			for j in xrange(len(data[i]['action'])):
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])
@@ -78,8 +83,33 @@ class TYMaze():
 		else:
 			return np.sum(loglike)
 		
+	# def sferes2(self, data):
+	# 	np.seterr(all='ignore')
+	# 	nb_point = data['info']['nb_point']
+	# 	nb_trial = data['info']['nb_trial']
+	# 	loglike = np.zeros(nb_point)
+	# 	self.model.startExp()
+	# 	self.world
+	# 	for i in xrange(nb_trial):
+	# 		for j in xrange(len(data[i]['action'])):
+	# 			pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])
+				
+	# 			# print np.log(pa)
+				
+	# 			self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
+	# 			loglike[data[i]['ind'][j]] = np.log(pa)
+
+	# 		if data[i]['reward'][-1] == 0:
+	# 			self.guidage()
+	# 	llh = np.sum(loglike)
+	# 	if llh==0 or np.isnan(llh) or np.isinf(llh):
+	# 		return -100000
+	# 	else:
+	# 		return np.sum(loglike)
+
 	def test(self, parameters, nb_exp, nb_trials):
 		self.model.__init__(parameters)
+		data = np.zeros((nb_exp, nb_trials))
 		for n in xrange(nb_exp):
 			self.model.startExp()
 			for i in xrange(nb_trials):			
@@ -96,9 +126,25 @@ class TYMaze():
 					if reward:
 						self.reward_found = True
 						break
-				print j
+				data[n,i] = j
 				if not self.reward_found:
 					self.guidage()
+		return data*1.05
+
+	def plot(self, data, mouse, parameters, latency, file_name):
+		figure() # for each model all subject            
+		mean_time = np.mean(data, 0)
+		std_time = np.std(data, 0)
+		plot(np.arange(len(mean_time)), mean_time, 'o-', label='Model')		
+		fill_between(np.arange(len(mean_time)), mean_time-(std_time/2.), mean_time+(std_time/2.), alpha=0.5)
+		plot(latency, 'o-', color = 'red', label='Mouse')
+		ylim(0,61)
+		desc = ", ".join([k+"="+str(np.round(parameters[k],2)) for k in parameters.keys()])
+		ylabel("Latency")
+		title(mouse+" | "+desc, fontsize = 11)
+		grid()
+		legend()
+		savefig(file_name)
 					
 
 					
