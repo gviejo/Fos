@@ -36,7 +36,8 @@ class pareto():
         self.directory = directory
         self.data = dict()
         self.models = dict({"VMWM":VMWM()})
-        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})
+        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta']})
+        # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})
         self.m_order = ['VMWM']
         self.best = dict() # the best parameters set for each mouse        
         self.best_log = dict()
@@ -63,17 +64,23 @@ class pareto():
             order = self.p_order[m]
             scale = self.models[m].bounds
             for r in lrun:
-                # s = r.split("_")[2]           
-                s = "_".join(r.split("_")[2:4])
+                s = "_".join(r.split("_")[2:4])[:-6]
+                n = int(r.split("_")[4].split(".")[0])
                 print("\t\t Mouse : "+s)
                 n = int(r.split("_")[4].split(".")[0])
                 if s in self.data[m].keys():
-                    self.data[m][s] = np.genfromtxt(self.directory+"/"+m+"/"+r)
+                    self.data[m][s][n] = np.genfromtxt(self.directory+"/"+m+"/"+r)
                 else :
                     self.data[m][s] = dict()
-                    self.data[m][s] = np.genfromtxt(self.directory+"/"+m+"/"+r)                                
+                    self.data[m][s][n] = np.genfromtxt(self.directory+"/"+m+"/"+r)                                
                 for p in order:
-                    self.data[m][s][:,order.index(p)+4] = scale[p][0]+self.data[m][s][:,order.index(p)+4]*(scale[p][1]-scale[p][0])
+                    self.data[m][s][n][:,order.index(p)+4] = scale[p][0]+self.data[m][s][n][:,order.index(p)+4]*(scale[p][1]-scale[p][0])
+        for m in self.data.iterkeys():
+            for s in self.data[m].iterkeys():
+                tmp = []
+                for n in self.data[m][s].iterkeys():
+                    tmp.append(np.hstack((np.ones((len(self.data[m][s][n]),1))*n,self.data[m][s][n])))
+                self.data[m][s] = np.vstack(tmp)
 
     def loadData(self):
         model_in_folders = os.listdir(self.directory)
@@ -122,7 +129,7 @@ class pareto():
         for m in self.data.iterkeys():
             self.upper_front[m] = dict()
             self.lower_front[m] = dict()
-            for s in self.data[m].iterkeys():                
+            for s in self.data[m].iterkeys():                                
                 ind = np.where(self.data[m][s][:,1] == 0)[0]
                 self.upper_front[m][s] = self.data[m][s][ind,2]
                 self.lower_front[m][s] = np.array([np.min(self.data[m][s][self.data[m][s][:,0]==g,2]) for g in np.unique(self.data[m][s][:,0])])
@@ -144,15 +151,15 @@ class pareto():
             # ax.set_legend()
 
             
-    def extractBestParameters(self):
+    def extractBestLog(self):
         for m in self.data.iterkeys():
             self.best[m] = dict()
             self.best_log[m] = dict()
             for s in self.data[m].iterkeys():
-                best_ind = np.where(self.data[m][s][:,0] == np.max(self.data[m][s][:,0]))[0][0] # default is first individu                
-                self.best[m][s] = {p:self.data[m][s][best_ind,4+self.p_order[m].index(p)] for p in self.p_order[m]}
-                self.best_log[m][s] = self.data[m][s][best_ind,2]
-        
+                # best_ind = np.where(self.data[m][s][:,0] == np.max(self.data[m][s][:,0]))[0][0] 
+                best_ind = np.argmax(self.data[m][s][:,3])
+                self.best[m][s] = {p:self.data[m][s][best_ind,5+self.p_order[m].index(p)] for p in self.p_order[m]}
+                self.best_log[m][s] = self.data[m][s][best_ind,3]        
             
         
         

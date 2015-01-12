@@ -38,10 +38,9 @@ parser.add_option("-o", "--output", action="store", help="The output file of bes
 # LOADING DATA
 # -----------------------------------
 front = pareto(options.input)
-front.extractFrontLimits()
-front.plotEvolution()
-
-front.extractBestParameters()
+# front.extractFrontLimits()
+# front.plotEvolution()
+front.extractBestLog()
 
 with open("parameters.pickle", 'wb') as f:
 	pickle.dump(front.best, f)
