@@ -83,29 +83,31 @@ class TYMaze():
 		else:
 			return np.sum(loglike)
 		
-	# def sferes2(self, data):
-	# 	np.seterr(all='ignore')
-	# 	nb_point = data['info']['nb_point']
-	# 	nb_trial = data['info']['nb_trial']
-	# 	loglike = np.zeros(nb_point)
-	# 	self.model.startExp()
-	# 	self.world
-	# 	for i in xrange(nb_trial):
-	# 		for j in xrange(len(data[i]['action'])):
-	# 			pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])
-				
-	# 			# print np.log(pa)
-				
-	# 			self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
-	# 			loglike[data[i]['ind'][j]] = np.log(pa)
+	def sferes2(self, data, latency):
+		np.seterr(all='ignore')
+		nb_point = data['info']['nb_point']
+		nb_trial = data['info']['nb_trial']
+		loglike = np.zeros(nb_point)
+		self.model.startExp()
+		self.world.startingPos()
+		for i in xrange(nb_trial):
+			for j in xrange(len(data[i]['action'])):
+				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])
+				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
+				loglike[data[i]['ind'][j]] = np.log(pa)
+			if data[i]['reward'][-1] == 0:
+				self.guidage()
+		llh = np.sum(loglike)
+		# Least squares test
+		data = self.test(self.model.parameters, 20, nb_trial)
+		lrs = -np.sum(np.power(latency-np.mean(data,0), 2))
 
-	# 		if data[i]['reward'][-1] == 0:
-	# 			self.guidage()
-	# 	llh = np.sum(loglike)
-	# 	if llh==0 or np.isnan(llh) or np.isinf(llh):
-	# 		return -100000
-	# 	else:
-	# 		return np.sum(loglike)
+		if llh==0 or np.isnan(llh) or np.isinf(llh):
+			return -100000, lrs
+		elif np.isnan(lrs) or np.isinf(lrs):
+			return llh, -100000
+		else:
+			return llh, lrs, data
 
 	def test(self, parameters, nb_exp, nb_trials):
 		self.model.__init__(parameters)

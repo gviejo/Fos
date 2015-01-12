@@ -14,17 +14,21 @@ import cPickle as pickle
 # (options, args) = parser.parse_args()
 with open("../../data/B139_68trials.pickle") as f:
 	data = pickle.load(f)
+with open("../latency.pickle", 'rb') as f:
+	latency = pickle.load(f)
 # model = VMWM()
+
 # parameters = vars(options)
 # for p in parameters.iterkeys():                                                                                                                   
 #     if parameters[p] is not None:
 #         parameters[p] = model.bounds[p][0]+parameters[p]*(model.bounds[p][1]-model.bounds[p][0])
 # parameters['length'] = 3
-parameters = {'beta':0.124936,
+parameters = {'beta':1.5,
 			'eta':0.722747999993,
-			'gamma':0.0,
+			'gamma':0.9,
 			'length':0}			
 model = VMWM(parameters)
 opt = TYMaze(model)
 llh = opt.sferes(data)
+# llh, lrs, data= opt.sferes2(data, latency['B139'])
 print llh
