@@ -17,7 +17,7 @@ import numpy as np
 sys.path.append("../../src")
 from matplotlib import *
 from pylab import *
-from Sferes import pareto
+from Sferes import *
 from itertools import *
 
 # -----------------------------------
@@ -37,7 +37,7 @@ parser.add_option("-o", "--output", action="store", help="The output file of bes
 # -----------------------------------
 # LOADING DATA
 # -----------------------------------
-front = pareto(options.input)
+front = maxlikelihood(options.input)
 # front.extractFrontLimits()
 # front.plotEvolution()
 front.extractBestLog()

@@ -4,6 +4,7 @@ import sys
 from optparse import OptionParser                                                   
 sys.path.append("../../src/")
 from Wrap import TYMaze
+import numpy as np
 from Models import VMWM
 import cPickle as pickle
 # parser = OptionParser()                                                             
@@ -14,8 +15,8 @@ import cPickle as pickle
 # (options, args) = parser.parse_args()
 with open("../../data/B139_68trials.pickle") as f:
 	data = pickle.load(f)
-with open("../latency.pickle", 'rb') as f:
-	latency = pickle.load(f)
+# with open("../latency.pickle", 'rb') as f:
+# 	latency = pickle.load(f)
 # model = VMWM()
 
 # parameters = vars(options)
@@ -26,9 +27,9 @@ with open("../latency.pickle", 'rb') as f:
 parameters = {'beta':1.5,
 			'eta':0.722747999993,
 			'gamma':0.9,
-			'length':0}			
+			'length':2}	
+epsilon = 0.0		
 model = VMWM(parameters)
 opt = TYMaze(model)
-llh = opt.sferes(data)
-# llh, lrs, data= opt.sferes2(data, latency['B139'])
+llh = opt.sferes(data, epsilon)
 print llh

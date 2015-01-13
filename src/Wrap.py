@@ -59,7 +59,7 @@ class TYMaze():
 			self.model.current_action = self.action_guiding[i]
 			self.model.updateValue(self.reward_guiding[i], self.states[self.state_guiding[i+1]])
 
-	def sferes(self, data):
+	def sferes(self, data, epsilon):
 		np.seterr(all='ignore')
 		nb_point = data['info']['nb_point']
 		nb_trial = data['info']['nb_trial']
@@ -67,13 +67,12 @@ class TYMaze():
 		self.model.startExp()
 		self.world.startingPos()
 		for i in xrange(nb_trial):
-			for j in xrange(len(data[i]['action'])):
-				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])
-				
-				# print np.log(pa)
-				
+			biais = np.exp(-epsilon*(float(len(data[i]['action']))-6.0))
+			print len(data[i]['action']), biais
+			for j in xrange(len(data[i]['action'])):				
+				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
-				loglike[data[i]['ind'][j]] = np.log(pa)
+				loglike[data[i]['ind'][j]] = np.log(pa)*biais
 
 			if data[i]['reward'][-1] == 0:
 				self.guidage()
@@ -107,7 +106,7 @@ class TYMaze():
 		elif np.isnan(lrs) or np.isinf(lrs):
 			return llh, -100000
 		else:
-			return llh, lrs, data
+			return llh, lrs
 
 	def test(self, parameters, nb_exp, nb_trials):
 		self.model.__init__(parameters)
@@ -147,6 +146,21 @@ class TYMaze():
 		grid()
 		legend()
 		savefig(file_name)
-					
+
+	def plotall(self, data, latency, filename):
+		rcParams['xtick.labelsize'] = 8
+		rcParams['ytick.labelsize'] = 8
+		fig = figure(figsize=(12,10))
+
+		for s,i in zip(data.keys(), xrange(len(data.keys()))):
+			mean_time = np.mean(data[s], 0)
+			std_time = np.std(data[s], 0)
+			ax = fig.add_subplot(4,4,i+1)
+			ax.plot(np.arange(len(mean_time)), mean_time, 'o-', label='Model')		
+			ax.fill_between(np.arange(len(mean_time)), mean_time-(std_time/2.), mean_time+(std_time/2.), alpha=0.5)
+			ax.plot(latency[s.split("_")[0]], 'o-', color = 'red', label='Mouse')
+			ax.set_title(s)
+		tight_layout()
+		savefig(filename)
 
 					
