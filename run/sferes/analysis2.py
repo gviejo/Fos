@@ -37,24 +37,13 @@ parser.add_option("-o", "--output", action="store", help="The output file of bes
 # -----------------------------------
 # LOADING DATA
 # -----------------------------------
-front = maxlikelihood(options.input)
-# front.extractFrontLimits()
-# front.plotEvolution()
-front.extractBestLog()
-front.write(options.input)
+front = pareto(options.input)
+front.constructParetoFrontier()
+front.rankDistance()
+front.preview()
+front.write(options.input, 'distance')
+
+show()
 
 
-sys.exit()
 
-fig = figure()
-m = 'VMWM'
-for i in xrange(len(front.p_order[m])):
-	ax = fig.add_subplot(3,1,i+1)
-	p = front.p_order[m][i]
-	for j in xrange(len(front.data[m].keys())):
-		s = front.data[m].keys()[j]
-		ax.plot(j, front.best[m][s][p], 'o')
-		ax.set_ylim(front.bounds[m][p][0], front.bounds[m][p][1])
-		ax.set_title(p)
-
-# show()

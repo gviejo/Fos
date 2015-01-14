@@ -30,7 +30,8 @@ class TYMaze():
 		self.reward_found = None
 		self.nb_trials_max = 52
 		self.nb_steps_max = 57
-		self.state_guiding = np.array([2,0,1,0,1,0,2])
+		self.state_guiding = np.array(['U','I','Y','I','Y','I','U'])
+		self.possible_guiding = np.array([[1,0,0,0],[1,0,1,0],[0,1,1,1],[1,0,1,0],[0,1,1,1],[1,0,1,0],[0,0,1,0]])
 		self.action_guiding = np.array([0,0,1,0,3,0])
 		self.reward_guiding = np.array([0,0,0,0,0,1])
 		self.pos_to_state = dict({	'1a':'U',
@@ -38,7 +39,7 @@ class TYMaze():
 									'I' :'Y',
 									'10':'I',
 									'II':'Y',
-									'8' :'U',
+									'8' :'I',
 								   'III':'U',
 								   	'9a':'U',
 								   	'9b':'I',
@@ -55,9 +56,8 @@ class TYMaze():
 
 	def guidage(self):
 		for i in xrange(6):
-			self.model.current_state = self.state_guiding[i]
-			self.model.current_action = self.action_guiding[i]
-			self.model.updateValue(self.reward_guiding[i], self.states[self.state_guiding[i+1]])
+			self.model.computeValue(self.state_guiding[i],self.action_guiding[i],self.possible_guiding[i])
+			self.model.updateValue(self.reward_guiding[i], self.state_guiding[i+1])
 
 	def sferes(self, data, epsilon):
 		np.seterr(all='ignore')
@@ -68,7 +68,7 @@ class TYMaze():
 		self.world.startingPos()
 		for i in xrange(nb_trial):
 			biais = np.exp(-epsilon*(float(len(data[i]['action']))-6.0))
-			print len(data[i]['action']), biais
+			# print len(data[i]['action']), biais
 			for j in xrange(len(data[i]['action'])):				
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
@@ -125,10 +125,12 @@ class TYMaze():
 					reward = self.world.readRew()
 					self.model.updateValue(reward, state)
 					if reward:
+						print "Found"
 						self.reward_found = True
 						break
 				data[n,i] = j
 				if not self.reward_found:
+					print "Guidage"
 					self.guidage()
 		return data*1.05
 
