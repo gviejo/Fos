@@ -28,14 +28,14 @@ class VMWM():
 		self.n_possible = self.n_state*np.sum(map(lambda x:self.n_action**x, range(self.parameters['length']+1)))
 		self.bounds = dict({"length":[0,3.9],
 							"gamma":[0.0, 0.9999999999],
-							"beta":[0.0, 50.0],
+							"beta":[0.0, 100.0],
 							"eta":[0.0, 0.99999999999]})
 		self.delta = 0.0		
 		# Values initialization		
-		# self.critic	= np.ones(self.n_possible)*0.1
-		# self.actor = np.ones((self.n_possible, self.n_action))*0.1
-		self.critic	= np.zeros(self.n_possible)
-		self.actor = np.zeros((self.n_possible, self.n_action))
+		self.critic	= np.ones(self.n_possible)*0.1
+		self.actor = np.ones((self.n_possible, self.n_action))*0.1
+		# self.critic	= np.zeros(self.n_possible)
+		# self.actor = np.zeros((self.n_possible, self.n_action))
 		#Various Init
 		self.current_state = None
 		self.current_action = None
@@ -72,10 +72,10 @@ class VMWM():
 				self.setParameters(i, parameters[i])
 
 	def startExp(self):
-		# self.critic	= np.ones(self.n_possible)*0.1
-		# self.actor = np.ones((self.n_possible, self.n_action))*0.1
-		self.critic	= np.zeros(self.n_possible)
-		self.actor = np.zeros((self.n_possible, self.n_action))
+		self.critic	= np.ones(self.n_possible)*0.1
+		self.actor = np.ones((self.n_possible, self.n_action))*0.1
+		# self.critic	= np.zeros(self.n_possible)
+		# self.actor = np.zeros((self.n_possible, self.n_action))
 
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
@@ -109,10 +109,10 @@ class VMWM():
 		q_values = self.actor[self.current_state][possible==1]
 		p_a = np.zeros(self.n_action)		
 		p_a[ind] = self.softMax(q_values)	
-		if 	np.isinf(np.log(p_a[self.current_action])):
-			print q_values
-			print p_a
-			print p_a[self.current_action], np.log(p_a[self.current_action])
+		# if 	np.isinf(np.log(p_a[self.current_action])):
+		# 	print q_values
+		# 	print p_a
+		# 	print p_a[self.current_action], np.log(p_a[self.current_action])
 		return p_a[self.current_action]
 
 	def chooseAction(self, state, possible):
