@@ -25,7 +25,7 @@ with open("../latency.pickle", 'rb') as handle:
 with open(options.input, 'rb') as handle:
 	parameters = pickle.load(handle)
 m = 'VMWM'
-nb_exp = 50
+nb_exp = 20
 wrap = TYMaze(VMWM())
 data = {}
 for s in parameters[m].keys():

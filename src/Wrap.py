@@ -67,12 +67,13 @@ class TYMaze():
 		self.model.startExp()
 		self.world.startingPos()
 		for i in xrange(nb_trial):
-			biais = np.exp(-epsilon*(float(len(data[i]['action']))-6.0))
+			# biais = np.exp(-epsilon*(float(len(data[i]['action']))-6.0))
 			# print len(data[i]['action']), biais
 			for j in xrange(len(data[i]['action'])):				
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
-				loglike[data[i]['ind'][j]] = np.log(pa)*biais
+				# loglike[data[i]['ind'][j]] = np.log(pa)*biais
+				loglike[data[i]['ind'][j]] = np.log(pa)
 
 			if data[i]['reward'][-1] == 0:
 				self.guidage()
@@ -125,12 +126,10 @@ class TYMaze():
 					reward = self.world.readRew()
 					self.model.updateValue(reward, state)
 					if reward:
-						print "Found"
 						self.reward_found = True
 						break
 				data[n,i] = j
 				if not self.reward_found:
-					print "Guidage"
 					self.guidage()
 		return data*1.05
 

@@ -79,20 +79,27 @@ class VMWM():
 
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
-		# if np.isinf(tmp).sum():
-		# 	tmp = np.isinf(tmp)*0.9999996+0.0000001            
-		# else :
-		# 	self.p_a = tmp/np.sum(tmp)           
-		return tmp/float(np.sum(tmp))
+		if np.isinf(tmp).sum():
+			print tmp
+		if np.isinf(tmp).sum() == 1:
+			tmp = np.isinf(tmp)*(1.0-len(tmp)*1e-8) + 1e-8
+		p_a = tmp/float(np.sum(tmp))
+		if np.sum(p_a==0.0):
+			p_a += 1e-8
+			p_a = p_a/float(np.sum(p_a))			
+		return p_a
 
 	def sampleSoftMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
-		# if np.isinf(tmp).sum():
-		# 	tmp = np.isinf(self.p_a)*0.9999996+0.0000001
-		# else :
-		tmp = tmp/float(np.sum(tmp))
-		tmp = [np.sum(tmp[0:i]) for i in range(len(tmp))]
-		return np.sum(np.array(tmp) < np.random.rand())-1 
+		if np.isinf(tmp).sum():
+			print tmp
+		if np.isinf(tmp).sum() == 1:
+			tmp = np.isinf(tmp)*(1.0-len(tmp)*1e-8) + 1e-8
+		p_a = tmp/float(np.sum(tmp))
+		if np.sum(p_a==0.0):
+			p_a += 1e-8
+			p_a = p_a/float(np.sum(p_a))	
+		return np.sum(np.array(p_a) < np.random.rand())-1 
 
 	def computeValue(self, state, a, possible):
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
@@ -101,7 +108,11 @@ class VMWM():
 		ind = self.ind[possible==1]
 		q_values = self.actor[self.current_state][possible==1]
 		p_a = np.zeros(self.n_action)		
-		p_a[ind] = self.softMax(q_values)		
+		p_a[ind] = self.softMax(q_values)	
+		if 	np.isinf(np.log(p_a[self.current_action])):
+			print q_values
+			print p_a
+			print p_a[self.current_action], np.log(p_a[self.current_action])
 		return p_a[self.current_action]
 
 	def chooseAction(self, state, possible):
