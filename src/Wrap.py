@@ -8,12 +8,11 @@ For guidage, reward delivery, maze structure, ...
 """
 
 import numpy as np
-import os
+import os,sys
 from world import World
 from matplotlib import *
-from pylab import *
 if os.uname()[1] in ['atlantis', 'paradise']:
-    from pylab import *    
+   from pylab import *    
 
 
 class TYMaze():
@@ -67,8 +66,8 @@ class TYMaze():
 		self.model.startExp()
 		self.world.startingPos()
 		for i in xrange(nb_trial):
+			self.model.startTrial()
 			# biais = np.exp(-epsilon*(float(len(data[i]['action']))-6.0))
-			# print len(data[i]['action']), biais
 			for j in xrange(len(data[i]['action'])):				
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
@@ -91,6 +90,7 @@ class TYMaze():
 		self.model.startExp()
 		self.world.startingPos()
 		for i in xrange(nb_trial):
+			self.model.startTrial()
 			for j in xrange(len(data[i]['action'])):
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
@@ -114,15 +114,16 @@ class TYMaze():
 		data = np.zeros((nb_exp, nb_trials))
 		for n in xrange(nb_exp):
 			self.model.startExp()
-			for i in xrange(nb_trials):			
+			for i in xrange(nb_trials):
+				self.model.startTrial()	
 				self.reward_found = False		
 				self.world.startingPos()
 				state = self.pos_to_state[self.world.mousePos]				
 				for j in xrange(self.nb_steps_max):								
 					possible = self.world.readPathwaysALaLouche()									
-					action = self.model.chooseAction(state, possible)					
+					action = self.model.chooseAction(state, possible)
 					self.move(action)
-					state = self.pos_to_state[self.world.mousePos]
+					state = self.pos_to_state[self.world.mousePos]					
 					reward = self.world.readRew()
 					self.model.updateValue(reward, state)
 					if reward:

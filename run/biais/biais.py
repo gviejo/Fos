@@ -44,13 +44,13 @@ for s in data.iterkeys():
 		parameters[s][n] = {p:data[s][n][best_ind,4+p_order.index(p)] for p in p_order}
 
 
-with open("SFERES5_parameters.pickle", 'wb') as f:
+with open("../sferes/SFERES5_parameters.pickle", 'wb') as f:
     pickle.dump(parameters, f)
 
 # TEST
 with open("../latency.pickle", 'rb') as handle:
   latency = pickle.load(handle)
-nb_exp = 40
+nb_exp = 30
 wrap = TYMaze(VMWM())
 test = {}
 cost = {}
@@ -64,7 +64,8 @@ for s in parameters.keys():
 		# wrap.plot(data[s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
 
 
-biais = np.linspace(0,20,20)
+biais = np.linspace(0,10,20)
+
 
 figure()
 subplot(5,1,1)

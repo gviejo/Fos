@@ -15,8 +15,8 @@ import cPickle as pickle
 from optparse import OptionParser
 import numpy as np
 sys.path.append("../../src")
-from matplotlib import *
-from pylab import *
+#from matplotlib import *
+#from pylab import *
 from Sferes import *
 from itertools import *
 

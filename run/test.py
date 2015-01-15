@@ -7,6 +7,8 @@ import sys
 sys.path.append("../src")
 from Wrap import TYMaze
 from Models import VMWM
+from matplotlib import *
+from pylab import *
 
 def action(a):		
 	print "Position", world.mousePos
@@ -22,16 +24,17 @@ def action(a):
 
 	print "Reward", reward
 
-parameters = dict({'length':2,
-					'beta':2.0,
-					'eta':0.1,
-					'gamma':0.9})
+parameters = {'beta': 13.405800000000001,
+ 'eta': 0.92488999999075105,
+ 'gamma': 0.96420399990357952,
+ 'length': 3}
 
 model = VMWM(parameters)
 
 wrap = TYMaze(model)
 world = wrap.world
-wrap.test(parameters, 1, 52)
+data = wrap.test(parameters, 1, 52)
+
 # model.startExp()
 # wrap.world.startingPos()
 

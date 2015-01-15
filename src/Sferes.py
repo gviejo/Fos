@@ -19,7 +19,7 @@ sys.path.append("../../src")
 from Models import *
 if os.uname()[1] in ['atlantis', 'paradise']:
     from multiprocessing import Pool, Process
-    from pylab import *
+    #from pylab import *
     import cPickle as pickle
 
 
