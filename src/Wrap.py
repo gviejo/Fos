@@ -72,6 +72,7 @@ class TYMaze():
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
 				# loglike[data[i]['ind'][j]] = np.log(pa)*biais
+				# loglike[data[i]['ind'][j]] = np.log(pa)*(1.0/float(len(data[i]['action'])-5))
 				loglike[data[i]['ind'][j]] = np.log(pa)
 
 			if data[i]['reward'][-1] == 0:
