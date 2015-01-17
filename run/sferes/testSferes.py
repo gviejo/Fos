@@ -25,16 +25,16 @@ with open("../latency.pickle", 'rb') as handle:
 with open(options.input, 'rb') as handle:
 	parameters = pickle.load(handle)
 m = 'VMWM'
-nb_exp = 20
+nb_exp = 100
 wrap = TYMaze(VMWM())
 data = {}
 for s in parameters[m].keys():
 	print m, s
 	if 'length' not in parameters[m][s].keys():
 		print "hello"
-		parameters[m][s].update({'length':3})
-	data[s] = wrap.test(parameters[m][s], nb_exp, int(s.split("_")[1]))
-	# wrap.plot(data[s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
+		parameters[m][s].update({'length':3})	
+	data[s] = wrap.test(parameters[m][s], nb_exp, int(s.split("_")[1]))	
+	wrap.plot(data[s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
 
 wrap.plotall(data, latency, "../test/"+options.input.split("_")[0]+"_all_test.pdf")
 
