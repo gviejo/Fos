@@ -19,7 +19,7 @@ sys.path.append("../../src")
 from Models import *
 if os.uname()[1] in ['atlantis', 'paradise']:
     from multiprocessing import Pool, Process
-    #from pylab import *
+    from pylab import *
     import cPickle as pickle
 
 
@@ -183,7 +183,7 @@ class pareto():
         self.data = dict()
         self.models = dict({"VMWM":VMWM()})
 
-        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})
+        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta']})
 
         self.m_order = ['VMWM']
         self.colors_m = dict({'VMWM':'r'})

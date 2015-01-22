@@ -157,16 +157,42 @@ class TYMaze():
 	def plotall(self, data, latency, filename):
 		rcParams['xtick.labelsize'] = 8
 		rcParams['ytick.labelsize'] = 8
-		fig = figure(figsize=(12,10))
+		fig = figure(figsize=(14,9))
 
 		for s,i in zip(data.keys(), xrange(len(data.keys()))):
 			mean_time = np.mean(data[s], 0)
 			std_time = np.std(data[s], 0)
-			ax = fig.add_subplot(4,4,i+1)
+			ax = fig.add_subplot(3,5,i+1)
 			ax.plot(np.arange(len(mean_time)), mean_time, 'o-', label='Model')		
 			ax.fill_between(np.arange(len(mean_time)), mean_time-(std_time/2.), mean_time+(std_time/2.), alpha=0.5)
 			ax.plot(latency[s.split("_")[0]], 'o-', color = 'red', label='Mouse')
 			ax.set_title(s)
+			ax.set_ylabel("Latency", fontsize=8)
+			ax.set_xlabel("Trials", fontsize=8)
+		
+		# probleme car tout les essais ne font pas la meme taille
+		mean_all = np.zeros(84)
+		std_all = np.zeros(84)
+		mean_mice = np.zeros(84)
+		std_mice = np.zeros(84)
+		for i in xrange(84):
+			tmp = []
+			tmp2 = []
+			for s in data.iterkeys():
+				if data[s].shape[1] > i:
+					tmp.append(data[s][:,i])
+					tmp2.append(latency[s.split("_")[0]][i])
+			mean_all[i] = np.mean(tmp)
+			std_all[i] = np.std(tmp)
+			mean_mice[i] = np.mean(tmp2)
+			std_mice[i] = np.std(tmp2)
+
+		ax = fig.add_subplot(3,5,15)		
+		ax.plot(np.arange(len(mean_all)), mean_all, 'o-', label='Model')
+		ax.fill_between(np.arange(len(mean_all)), mean_all-(std_all/2.), mean_all+(std_all/2.), alpha=0.5)
+		ax.plot(np.arange(len(mean_mice)), mean_mice, '-', color = 'red', label='Mouse')
+		# ax.fill_between(np.arange(len(mean_all)), mean_all-(std_all/2.), mean_all+(std_all/2.), alpha=0.5)
+		ax.legend()
 		tight_layout()
 		savefig(filename)
 
