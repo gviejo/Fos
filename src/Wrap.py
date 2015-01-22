@@ -58,29 +58,25 @@ class TYMaze():
 			self.model.computeValue(self.state_guiding[i],self.action_guiding[i],self.possible_guiding[i])
 			self.model.updateValue(self.reward_guiding[i], self.state_guiding[i+1])
 
-	def sferes(self, data, epsilon):
+	def sferes(self, data):
 		np.seterr(all='ignore')
 		nb_point = data['info']['nb_point']
 		nb_trial = data['info']['nb_trial']
 		loglike = np.zeros(nb_point)
 		self.model.startExp()
-		self.world.startingPos()
-		tmp = []
+		self.world.startingPos()		
 		for i in xrange(nb_trial):
 			self.model.startTrial()
-			# biais = np.exp(-epsilon*(float(len(data[i]['action']))-6.0))
 			v = 0.0
 			for j in xrange(len(data[i]['action'])):				
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
-				# loglike[data[i]['ind'][j]] = np.log(pa)*biais
-				# loglike[data[i]['ind'][j]] = np.log(pa)*(1.0/float(len(data[i]['action'])-5))
 				loglike[data[i]['ind'][j]] = np.log(pa)
 				v+= np.log(pa)
 			tmp.append([j+1, v])
 			if data[i]['reward'][-1] == 0:
 				self.guidage()
-		return tmp
+		
 		llh = np.sum(loglike)
 		if llh==0 or np.isnan(llh) or np.isinf(llh):
 			return -100000
