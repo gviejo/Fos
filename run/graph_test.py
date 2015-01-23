@@ -29,6 +29,8 @@ parameters = {'beta': 13.405800000000001,
  'gamma': 0.96420399990357952}
  
 
+
+
 model = Graph(parameters)
 
 wrap = TYMaze(model)
