@@ -37,8 +37,8 @@ class maxlikelihood():
         self.directory = directory
         self.data = dict()
         self.models = dict({"VMWM":VMWM()})
-        # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta']})
-        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})
+        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta']})
+        # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})
         self.m_order = ['VMWM']
         self.best = dict() # the best parameters set for each mouse        
         self.best_log = dict()

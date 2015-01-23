@@ -133,7 +133,7 @@ class VMWM():
 class Graph():
 	""" from B.Babayan thesis
 	"""
-	def __init__(self, parameters):
+	def __init__(self, parameters={}):
 		# Parameters
 		self.parameters = parameters	
 		self.n_action = len(actions)
@@ -142,10 +142,17 @@ class Graph():
 							"beta":[0.0, 200.0],
 							"eta":[0.0, 0.99999999999]})		
 		# Graph initialization		
-		self.graph = {}		
+		self.nodes = {0:np.zeros(self.n_action,dtype=int)} # node : [node1,0,node4,0]
+		self.states = {0:'U'}
+		self.edges = {0:[]} # node:[a1, a2, a3]
+		self.current_node = 0
+		self.T = {0:np.zeros(self.n_action,dtype=float)}
+		self.V = {0:0.0}
+		self.R = {0:0.0}
+		self.back = {}
 		#Various Init
 		self.ind = np.arange(self.n_action)
-		self.q_values = None
+		self.q_values = np.zeros(self.n_action)
 
 	def setParameters(self, name, value):            
 		if value < self.bounds[name][0]:
@@ -161,10 +168,21 @@ class Graph():
 				self.setParameters(i, parameters[i])
 
 	def startExp(self):
-		self.graph = {}
+		# Graph initialization		
+		self.nodes = {0:np.zeros(self.n_action,dtype=int)} # node : [node1,0,node4,0]
+		self.states = {0:'U'}
+		self.edges = {0:[]} # node:[a1, a2, a3]
+		self.current_node = 0
+		self.T = {0:np.zeros(self.n_action,dtype=float)}
+		self.V = {0:0.0}
+		self.R = {0:0.0}
+		self.back = {}
+		#Various Init
+		self.ind = np.arange(self.n_action)
+		self.q_values = np.zeros(self.n_action)		
 
 	def startTrial(self):
-		pass
+		self.current_node = 0
 
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
@@ -187,32 +205,70 @@ class Graph():
 		tmp = [np.sum(p_a[0:i]) for i in range(len(p_a))]
 		return np.sum(np.array(tmp) < np.random.rand())-1 
 
+	def retropropagate(self, node):		
+		self.V[node] = np.max([self.R[node],self.V[node],np.max([self.parameters['gamma']*self.T[node][a]*self.V[self.nodes[node][a]] for a in self.edges[node]])])
+		if self.back[node]:
+			self.retropropagate(self.back[node])
+		else:
+			return
+
 	def computeValue(self, state, a, possible):
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
-		self.current_state = self.convert[state+"".join(self.last_actions)]
+		self.current_state = self.states[self.current_node]
+		if self.current_state != state:
+			print self.current_node
+			print self.current_state, state
+			print "problem" 
+			sys.exit()		
 		self.current_action = a
 		ind = self.ind[possible==1]
-		q_values = self.actor[self.current_state][possible==1]
+		self.q_values *= 0.0
+		for a in self.edges[self.current_node]:
+			self.q_values[a] = self.parameters['gamma']*self.T[self.current_node][a]*self.V[self.nodes[self.current_node][a]]		
 		p_a = np.zeros(self.n_action)		
-		p_a[ind] = self.softMax(q_values)			
+		p_a[ind] = self.softMax(self.q_values[possible==1])			
 		return p_a[self.current_action]
 
 	def chooseAction(self, state, possible):
-		self.current_state = state
+		self.current_state = self.states[self.current_node]		
+		if self.current_state != state:
+			print "problem"
+			sys.exit()
 		ind = self.ind[possible==1]
-		self.explore()
-	
-		self.current_action = ind[self.sampleSoftMax(self.q_values)]
+		self.q_values *= 0.0
+		for a in self.edges[self.current_node]:
+			self.q_values[a] = self.parameters['gamma']*self.T[self.current_node][a]*self.V[self.nodes[self.current_node][a]]	
+		self.current_action = ind[self.sampleSoftMax(self.q_values[possible==1])]
 		return actions[self.current_action]		
 
 	def updateValue(self, reward, next_state):
-		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0		        
-		# Update list of previous action
-		if self.parameters['length']:
-			self.last_actions[1:] = self.last_actions[:-1]
-			self.last_actions[0] = actions[self.current_action]
+		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0		        		
+		if self.current_action in self.edges[self.current_node]:
+			new_node = self.nodes[self.current_node][self.current_action]
+			self.T[self.current_node][self.current_action] += (self.parameters['eta']*(1.0-self.T[self.current_node][self.current_action]))			
+		else:
+			new_node=np.max(self.nodes.keys())+1
+			self.nodes[self.current_node][self.current_action] = new_node			
+			self.edges[self.current_node].append(self.current_action)
+			self.T[self.current_node][self.current_action] = self.parameters['eta']
+			self.nodes[new_node] = np.zeros(self.n_action, dtype=int)
+			self.states[new_node] = next_state
+			self.edges[new_node] = []						
+			self.T[new_node] = np.zeros(self.n_action, dtype=float)
+			self.R[new_node] = r
+			self.V[new_node] = r			
+			self.back[new_node] = self.current_node
+		self.current_node = new_node
+		self.current_state = next_state
+		if r:
+			self.retropropagate(self.back[self.current_node])
+
+
+
+			
+
 		# Delta update
-		n_s = self.convert[next_state+"".join(self.last_actions)]
-		self.delta = r + self.parameters['gamma']*self.critic[n_s] - self.critic[self.current_state]
-		self.critic[self.current_state] += (self.parameters['eta']*self.delta)
-		self.actor[self.current_state, self.current_action] += (self.parameters['eta']*self.delta)
+		# n_s = self.convert[next_state+"".join(self.last_actions)]
+		# self.delta = r + self.parameters['gamma']*self.critic[n_s] - self.critic[self.current_state]
+		# self.critic[self.current_state] += (self.parameters['eta']*self.delta)
+		# self.actor[self.current_state, self.current_action] += (self.parameters['eta']*self.delta)

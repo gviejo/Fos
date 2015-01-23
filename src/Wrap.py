@@ -53,8 +53,9 @@ class TYMaze():
 		# 0 : Forward, 1 : Left, 2 : Backward, 3 : Right
 		self.world.moveALaLouche(self.actions.index(action))
 
-	def guidage(self):
-		for i in xrange(6):
+	def guidage(self):		
+		self.model.startTrial()
+		for i in xrange(6):			
 			self.model.computeValue(self.state_guiding[i],self.action_guiding[i],self.possible_guiding[i])
 			self.model.updateValue(self.reward_guiding[i], self.state_guiding[i+1])
 
@@ -64,16 +65,13 @@ class TYMaze():
 		nb_trial = data['info']['nb_trial']
 		loglike = np.zeros(nb_point)
 		self.model.startExp()
-		self.world.startingPos()		
+		self.world.startingPos()
 		for i in xrange(nb_trial):
 			self.model.startTrial()
-			v = 0.0
 			for j in xrange(len(data[i]['action'])):				
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
 				loglike[data[i]['ind'][j]] = np.log(pa)
-				v+= np.log(pa)
-			tmp.append([j+1, v])
 			if data[i]['reward'][-1] == 0:
 				self.guidage()
 		
@@ -120,8 +118,8 @@ class TYMaze():
 				self.reward_found = False		
 				self.world.startingPos()
 				state = self.pos_to_state[self.world.mousePos]				
-				for j in xrange(self.nb_steps_max):								
-					possible = self.world.readPathwaysALaLouche()									
+				for j in xrange(self.nb_steps_max):					
+					possible = self.world.readPathwaysALaLouche()
 					action = self.model.chooseAction(state, possible)
 					self.move(action)
 					state = self.pos_to_state[self.world.mousePos]					
