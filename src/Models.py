@@ -270,3 +270,79 @@ class Graph():
 		# self.delta = r + self.parameters['gamma']*self.critic[n_s] - self.critic[self.current_state]
 		# self.critic[self.current_state] += (self.parameters['eta']*self.delta)
 		# self.actor[self.current_state, self.current_action] += (self.parameters['eta']*self.delta)
+
+class PI():
+	""" from B. Babayan thesis
+	"""
+
+	def __init__(self, parameters = {}):
+		# Parameters
+		self.parameters = parameters		
+		self.n_action = len(actions)
+		self.n_state = len(states)		
+		self.bounds = dict({"gamma":[0.0, 0.9999999999],
+							"beta":[0.0, 200.0],
+							"eta":[0.0, 0.99999999999]})		
+		# Values initialization		
+
+		#Various Init
+
+	def setParameters(self, name, value):            
+		if value < self.bounds[name][0]:
+			self.parameters[name] = self.bounds[name][0]
+		elif value > self.bounds[name][1]:
+			self.parameters[name] = self.bounds[name][1]
+		else:
+			self.parameters[name] = value                
+
+	def setAllParameters(self, parameters):
+		for i in parameters.iterkeys():
+			if i in self.bounds.keys():
+				self.setParameters(i, parameters[i])
+
+	def startExp(self):
+		pass
+
+	def startTrial(self):
+		pass
+
+	def softMax(self, values):
+		tmp = np.exp(values*float(self.parameters['beta']))
+		if np.isinf(tmp).sum() == 1:
+			tmp = np.isinf(tmp)*(1.0-len(tmp)*1e-8) + 1e-8
+		p_a = tmp/float(np.sum(tmp))
+		if np.sum(p_a==0.0):
+			p_a += 1e-8
+			p_a = p_a/float(np.sum(p_a))			
+		return p_a
+
+	def sampleSoftMax(self, values):
+		tmp = np.exp(values*float(self.parameters['beta']))
+		if np.isinf(tmp).sum() == 1:
+			tmp = np.isinf(tmp)*(1.0-len(tmp)*1e-8) + 1e-8
+		p_a = tmp/float(np.sum(tmp))
+		if np.sum(p_a==0.0):
+			p_a += 1e-8
+			p_a = p_a/float(np.sum(p_a))	
+		tmp = [np.sum(p_a[0:i]) for i in range(len(p_a))]
+		return np.sum(np.array(tmp) < np.random.rand())-1 
+
+	def computeValue(self, state, a, possible):
+		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
+		self.current_state = state
+		self.current_action = a
+		ind = self.ind[possible==1]
+		q_values = self.actor[self.current_state][possible==1]
+		p_a = np.zeros(self.n_action)		
+		p_a[ind] = self.softMax(q_values)			
+		return p_a[self.current_action]
+
+	def chooseAction(self, state, possible):
+		self.current_state = self.convert[state+"".join(self.last_actions)]
+		ind = self.ind[possible==1]
+		q_values = self.actor[self.current_state][possible==1]		
+		self.current_action = ind[self.sampleSoftMax(q_values)]
+		return actions[self.current_action]		
+
+	def updateValue(self, reward, next_state):
+		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0		        
