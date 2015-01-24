@@ -216,8 +216,6 @@ class Graph():
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
 		self.current_state = self.states[self.current_node]
 		if self.current_state != state:
-			print self.current_node
-			print self.current_state, state
 			print "problem" 
 			sys.exit()		
 		self.current_action = a

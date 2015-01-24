@@ -68,7 +68,7 @@ class TYMaze():
 		self.world.startingPos()
 		for i in xrange(nb_trial):
 			self.model.startTrial()
-			for j in xrange(len(data[i]['action'])):				
+			for j in xrange(len(data[i]['action'])):								
 				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
 				loglike[data[i]['ind'][j]] = np.log(pa)
