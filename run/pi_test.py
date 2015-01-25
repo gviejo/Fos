@@ -44,17 +44,52 @@ world = wrap.world
 # 		# sys.stdin.readline()
 # # rec(0, [])
 
+transition = set()
+
 world.startingPos()
-for a in [0,0,1,0,1,0,2,0,1,0,2,0,1,0,1,0,1,0,2,0,1,0,2,0,1,0,1,0,2]:
+old_position = world.mousePos
+world.moveALaLouche(0)
+for a in [0,1,0,1,0,2,0,1,0,2,0,1,0,1,0,1,0,2,0,1,0,2,0,1,0,1,0,2]:
 	position = world.mousePos
-	print position
+	if np.sum(world.readPathwaysALaLouche())>1:
+		transition.add((old_position,position,a))		
 	world.moveALaLouche(a)
-position = world.mousePos
-print position
+	old_position = position	
+
 world.startingPos()
-print "\n"
-for a in [0,0,3,0,3,0,2,0,3,0,2,0,3,0,3,0,3,0,2,0,3,0,2,0,3,0,3,0,2]:
+old_position = world.mousePos
+world.moveALaLouche(0)
+for a in [0,3,0,3,0,2,0,3,0,2,0,3,0,3,0,3,0,2,0,3,0,2,0,3,0,3,0,2]:
 	position = world.mousePos
-	print position
+	if np.sum(world.readPathwaysALaLouche())>1:
+		transition.add((old_position,position,a))
 	world.moveALaLouche(a)
-position = world.mousePos
+	old_position = position	
+
+tmp = dict.fromkeys(transition)
+alpha = np.linspace(0,2*np.pi, 61)
+
+world.startingPos()
+old_position = world.mousePos
+world.moveALaLouche(0)
+for a in [0,1,0,1,0,2,0,1,0,2,0,1,0,1,0,1,0,2,0,1,0,2,0,1,0,1,0,2]:
+	position = world.mousePos
+	if (old_position,position,a) in tmp.keys():
+		tmp[(old_position,position,a)] = [world.mouseDir]
+	world.moveALaLouche(a)
+	if (old_position,position,a) in tmp.keys():
+		tmp[(old_position,position,a)].append(world.mouseDir)
+	old_position = position	
+
+world.startingPos()
+old_position = world.mousePos
+world.moveALaLouche(0)
+for a in [0,3,0,3,0,2,0,3,0,2,0,3,0,3,0,3,0,2,0,3,0,2,0,3,0,3,0,2]:
+	position = world.mousePos
+	if (old_position,position,a) in tmp.keys():
+		tmp[(old_position,position,a)] = [world.mouseDir]
+	world.moveALaLouche(a)
+	if (old_position,position,a) in tmp.keys():
+		tmp[(old_position,position,a)].append(world.mouseDir)
+	old_position = position	
+
