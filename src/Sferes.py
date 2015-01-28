@@ -36,15 +36,19 @@ class maxlikelihood():
     def __init__(self, directory, speed = 'slowloading'):
         self.directory = directory
         self.data = dict()
-        self.models = dict({"VMWM":VMWM()})
-        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta']})
-        # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})
-        self.m_order = ['VMWM']
+        self.models = dict({"VMWM":VMWM(),
+                            "Graph":Graph()})
+        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta'],
+                            'Graph':['beta', 'gamma', 'eta'],
+                            'PI':['beta','gamma','eta']})
+        # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})        
         self.best = dict() # the best parameters set for each mouse        
         self.best_log = dict()
         self.upper_front = dict() # the fitness max at each generation for each mouse and each model 
         self.lower_front = dict() # the fitness min at each geneartion for each mouse and each model 
-
+        self.label = {'late stage':['B28','B61','B137','B155','B163','B166','B150','B62','B76','B84','B139','B154','B74','B86','B152'],
+                    'late stage approx':['B18','B20','B143','B78','B141','B144','B165','B82'],
+                    'slow learner':['B22','B25','B58','B68','B70','B148','B161']}
         if speed == 'fastloading':
             print "Loading is fast, only last generation is loaded \n Change with speed='slowloading'\n"
             print("Loaded :")
@@ -161,18 +165,67 @@ class maxlikelihood():
                 best_ind = np.argmax(self.data[m][s][:,3])
                 self.best[m][s] = {p:self.data[m][s][best_ind,5+self.p_order[m].index(p)] for p in self.p_order[m]}
                 self.best_log[m][s] = self.data[m][s][best_ind,3]        
+        
+        # Winner par model
+        subject = self.data[self.data.keys()[0]].keys()
+        order = self.data.keys()
+        self.winner = {m:[] for m in order}
+        for s in subject:
+            win = np.argmax([self.best_log[m][s] for m in order])
+            self.winner[order[win]].append(s)
             
+        # group of best model
+        winner = {m:[s.split("_")[0] for s in self.winner[m]] for m in self.winner.keys()}        
+        self.group = dict()
+        for g in self.label.iterkeys():
+            self.group[g] = dict()
+            for m in order:
+                self.group[g][m] = []
+                for s in winner[m]:                    
+                    if s in self.label[g]:
+                        self.group[g][m].append(s)                            
+
     def write(self, name):
         with open(name+"_parameters.pickle", 'wb') as f:
             pickle.dump(self.best, f)
         with open(name+"_parameters.txt", 'w') as f:
+            f.write("BEST \n")
+            # for g in self.group.iterkeys():
+            for g in ['late stage', 'late stage approx', 'slow learner']:
+                for m in self.group[g].iterkeys():
+                    line = "group="+g+"\tmodel="+m+"\t"
+                    line += " ".join([s for s in self.group[g][m]])
+                    line += "\n"
+                    f.write(line)
+            f.write("\n")
             for m in self.best.keys():
+                f.write(m+"\n")
                 for s in self.best[m].keys():
                     line="mouse="+s.split("_")[0]+"\t"
                     line += " \t ".join([k+"="+str(self.best[m][s][k]) for k in self.p_order[m]])
                     line += "\t\tloglikelihood = "+str(self.best_log[m][s])+"\n"
                     f.write(line)
+                f.write("\n")
 
+        
+
+
+
+    def plotHistBest(self, name):
+
+        best_log = {m:{s.split("_")[0]:self.best_log[m][s] for s in self.best_log[m].iterkeys()} for m in self.best_log.iterkeys()}
+        figure()         
+        for l,i in zip(self.label.keys(),range(len(self.label.keys()))):
+            subplot(len(self.label.keys()),1,i+1)            
+            x_pos = np.arange(len(self.label[l]))
+            for s,j in zip(self.label[l],x_pos):
+                bar(j, best_log['VMWM'][s], 0.1)
+
+        tight_layout()
+        grid()
+        legend()
+        show()
+        # savefig(file_name)
 
 class pareto():
     """

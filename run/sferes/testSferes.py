@@ -4,8 +4,9 @@ import sys, os
 sys.path.append("../../src/")
 import numpy as np
 from Wrap import TYMaze
-from Models import VMWM
+from Models import *
 import cPickle as pickle
+from Sferes import *
 from optparse import OptionParser
 
 # -----------------------------------
@@ -24,17 +25,27 @@ with open("../latency.pickle", 'rb') as handle:
 
 with open(options.input, 'rb') as handle:
 	parameters = pickle.load(handle)
-m = 'VMWM'
-nb_exp = 30
-wrap = TYMaze(VMWM())
-data = {}
-for s in parameters[m].keys():
-	print m, s
-	if 'length' not in parameters[m][s].keys():
-		print "hello"
-		parameters[m][s].update({'length':3})	
-	data[s] = wrap.test(parameters[m][s], nb_exp, int(s.split("_")[1]))	
-	wrap.plot(data[s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
 
-wrap.plotall(data, latency, "../test/"+options.input.split("_")[0]+"_all_test.pdf")
+models = {'VMWM':VMWM(),
+		'Graph':Graph()}
+wrap = TYMaze(VMWM())
+nb_exp = 100
+data = {}
+for m in parameters.keys():
+	wrap = TYMaze(models[m])
+	data[m] = {}
+	for s in parameters[m].keys():
+		print m, s
+		if m == 'VMWM' and 'length' not in parameters[m][s].keys():			
+			parameters[m][s].update({'length':3})	
+		data[m][s] = wrap.test(parameters[m][s], nb_exp, int(s.split("_")[1]))	
+		
+		# wrap.plot(data[s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
+
+
+with open("data_tmp", 'rb') as handle:
+	data = pickle.load(handle)
+wrap.plotall(data, latency, "../test/"+options.input.split("_")[0])
+
+os.system("evince ../test/SFERES9_group_test_all_models.pdf")
 

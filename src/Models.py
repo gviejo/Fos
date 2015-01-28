@@ -10,7 +10,7 @@ model-free reinforcement + working memory = VMWM
 
 import numpy as np
 import sys, os
-
+import scipy.stats
 states = np.array(['I', 'Y', 'U'])
 actions = np.array(['F', 'L', 'U', 'R'])
 
@@ -283,41 +283,8 @@ class PI():
 		self.bounds = dict({"gamma":[0.0, 0.9999999999],
 							"beta":[0.0, 200.0],
 							"eta":[0.0, 0.99999999999]})		
-		# Values initialization		
-		self.transition = {('10', 'I', 1): [39, 51],
-							('10', 'I', 3): [39, 30],
-							('10', 'II', 1): [9, 18],
-							('10', 'II', 3): [9, 57],
-							('1a', '1b', 0): [0, 0],
-							('1b', 'I', 1): [0, 9],
-							('1b', 'I', 3): [0, 51],
-							('2', 'I', 1): [21, 30],
-							('2', 'I', 3): [21, 9],
-							('2', 'V', 1): [51, 3],
-							('2', 'V', 3): [51, 42],
-							('3a', '3b', 0): [12, 12],
-							('3b', 'V', 1): [12, 21],
-							('3b', 'V', 3): [12, 3],
-							('4', 'V', 1): [33, 42],
-							('4', 'V', 3): [33, 21],
-							('8', 'II', 1): [27, 39],
-							('8', 'II', 3): [27, 18],
-							('9a', '9b', 0): [48, 48],
-							('9b', 'II', 1): [48, 57],
-							('9b', 'II', 3): [48, 39],
-							('I', '10', 0): [9, 9],
-							('I', '1b', 0): [30, 30],
-							('I', '2', 0): [51, 51],
-							('II', '10', 0): [39, 39],
-							('II', '8', 0): [57, 57],
-							('II', '9b', 0): [18, 18],
-							('III', '8', 0): [27, 27],
-							('IV', '4', 0): [33, 33],
-							('V', '2', 0): [21, 21],
-							('V', '3b', 0): [42, 42],
-							('V', '4', 0): [3, 3]}
-		self.alpha = np.linspace(0, 2*np.pi, 60)
-		self.position = {'10': [-0.19, 0.608],
+		# Values initialization				
+		self.positions = {'10': [-0.19, 0.608],
 						 '1a': [0, 0],
 						 '1b': [0.0, 0.235],
 						 '2': [0.19, 0.608],
@@ -332,7 +299,22 @@ class PI():
 						 'III': [-0.235, 1.193],
 						 'IV': [0.235, 1.193],
 						 'V': [0.38, 0.746]}
+		self.varPos = self.parameters['gamma']
+		self.varGoal = 0.0				
+		# Matrix init
+		self.n_case = 30
+		self.grain = 6./self.n_case	
+		self.grid = np.dstack(np.meshgrid(np.linspace(-3,3,self.n_case+1),np.linspace(-3,3,self.n_case+1), indexing = 'xy'))
+		self.Pgoal = np.zeros((self.n_case, self.n_case))
+		self.Ppos = np.zeros((self.n_case, self.n_case))
+
 		#Various Init
+		self.q_values = None
+		self.current_position = '1a'
+		self.current_action = None		
+		self.ind = np.arange(self.n_action)
+		self.reward_position = self.positions['III']		
+		self.reward_found = False
 
 	def setParameters(self, name, value):            
 		if value < self.bounds[name][0]:
@@ -348,10 +330,12 @@ class PI():
 				self.setParameters(i, parameters[i])
 
 	def startExp(self):
-		pass
+		self.varPos = self.parameters['gamma']
+		self.varGoal = 0.0
 
 	def startTrial(self):
-		pass
+		self.current_position = '1a'
+		self.current_action = None		
 
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
@@ -374,22 +358,54 @@ class PI():
 		tmp = [np.sum(p_a[0:i]) for i in range(len(p_a))]
 		return np.sum(np.array(tmp) < np.random.rand())-1 
 
-	def computeValue(self, state, a, possible):
+	def computeAngle(self, s1, s2):
+		x = self.positions[s2][0]-self.positions[s1][0]
+		y = self.positions[s2][1]-self.positions[s1][1]
+		return np.arctan2(y, x)
+
+	def cdf_multi(self, lower, upper, mu, cov):
+	    # lower = [x0,y0]
+	    # upper= [x1,y1]
+	    # mu = [xm, ym]
+	    # cov = sigma
+	    stdev = np.sqrt(np.diag(np.eye(2)*cov))
+	    lower = (lower-mu)/stdev
+	    upper = (upper-mu)/stdev
+	    correl = np.zeros(1)
+	    infin = 2.0*np.ones(2)
+	    error, cdfvalue, inform = scipy.stats.kde.mvn.mvndst(lower,upper,infin,correl)
+	    return cdfvalue    
+
+	def fill_PGoal(self):
+		for y in xrange(self.n_case):
+			for x in xrange(self.n_case):
+				self.Pgoal[y,x] = self.cdf_multi(self.grid[y,x],self.grid[y+1,x+1], self.reward_position, self.varGoal)
+				
+	def computeValue(self, position, state, a, possible):
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
-		self.current_state = state
+		self.current_position = position
 		self.current_action = a
 		ind = self.ind[possible==1]
-		q_values = self.actor[self.current_state][possible==1]
+
+		self.q_values = np.ones(len(ind))
 		p_a = np.zeros(self.n_action)		
-		p_a[ind] = self.softMax(q_values)			
+		p_a[ind] = self.softMax(self.q_values)			
 		return p_a[self.current_action]
 
-	def chooseAction(self, state, possible):
-		self.current_state = self.convert[state+"".join(self.last_actions)]
+	def chooseAction(self, position, state, possible):		
+		self.current_position = position
 		ind = self.ind[possible==1]
-		q_values = self.actor[self.current_state][possible==1]		
-		self.current_action = ind[self.sampleSoftMax(q_values)]
+		if self.reward_found:
+			pass
+		else:
+			self.q_values = np.ones(len(ind))
+		self.current_action = ind[self.sampleSoftMax(self.q_values)]
 		return actions[self.current_action]		
 
 	def updateValue(self, reward, next_state):
 		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0		        
+		self.varPos += self.parameters['gamma']
+		if r:
+			self.reward_found = True
+			self.varGoal = (1.0-self.parameters['eta'])*self.varGoal + self.parameters['eta']*self.varPos
+			self.fill_PGoal()

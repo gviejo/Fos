@@ -31,6 +31,7 @@ class TYMaze():
 		self.nb_steps_max = 57
 		self.state_guiding = np.array(['U','I','Y','I','Y','I','U'])
 		self.possible_guiding = np.array([[1,0,0,0],[1,0,1,0],[0,1,1,1],[1,0,1,0],[0,1,1,1],[1,0,1,0],[0,0,1,0]])
+		self.pos_guiding = np.array(['1a','1b','I','10','II','8','III'])
 		self.action_guiding = np.array([0,0,1,0,3,0])
 		self.reward_guiding = np.array([0,0,0,0,0,1])
 		self.pos_to_state = dict({	'1a':'U',
@@ -48,6 +49,9 @@ class TYMaze():
 								   	'3a':'U',
 								   	'4' :'I',
 								   	'IV':'U'})
+		self.label = {'late stage':['B28','B61','B137','B155','B163','B166','B150','B62','B76','B84','B139','B154','B74','B86','B152'],
+                    'late stage approx':['B18','B20','B143','B78','B141','B144','B165','B82'],
+                    'slow learner':['B22','B25','B58','B68','B70','B148','B161']}
 
 	def move(self, action):
 		# 0 : Forward, 1 : Left, 2 : Backward, 3 : Right
@@ -56,7 +60,7 @@ class TYMaze():
 	def guidage(self):		
 		self.model.startTrial()
 		for i in xrange(6):			
-			self.model.computeValue(self.state_guiding[i],self.action_guiding[i],self.possible_guiding[i])
+			self.model.computeValue(self.pos_guiding[i], self.state_guiding[i],self.action_guiding[i],self.possible_guiding[i])
 			self.model.updateValue(self.reward_guiding[i], self.state_guiding[i+1])
 
 	def sferes(self, data):
@@ -151,43 +155,57 @@ class TYMaze():
 	def plotall(self, data, latency, filename):
 		rcParams['xtick.labelsize'] = 8
 		rcParams['ytick.labelsize'] = 8
-		fig = figure(figsize=(14,9))
 
-		for s,i in zip(data.keys(), xrange(len(data.keys()))):
-			mean_time = np.mean(data[s], 0)
-			std_time = np.std(data[s], 0)
-			ax = fig.add_subplot(3,5,i+1)
-			ax.plot(np.arange(len(mean_time)), mean_time, 'o-', label='Model')		
-			ax.fill_between(np.arange(len(mean_time)), mean_time-(std_time/2.), mean_time+(std_time/2.), alpha=0.5)
-			ax.plot(latency[s.split("_")[0]], 'o-', color = 'red', label='Mouse')
-			ax.set_title(s)
-			ax.set_ylabel("Latency", fontsize=8)
-			ax.set_xlabel("Trials", fontsize=8)
+		data = {m:{s.split("_")[0]:data[m][s] for s in data[m].keys()} for m in data.keys()}
+		colors = {'Graph':'green','VMWM':'blue','PI':'gray'}
 		
-		# probleme car tout les essais ne font pas la meme taille
-		mean_all = np.zeros(84)
-		std_all = np.zeros(84)
-		mean_mice = np.zeros(84)
-		std_mice = np.zeros(84)
-		for i in xrange(84):
-			tmp = []
-			tmp2 = []
-			for s in data.iterkeys():
-				if data[s].shape[1] > i:
-					tmp.append(data[s][:,i])
-					tmp2.append(latency[s.split("_")[0]][i])
-			mean_all[i] = np.mean(tmp)
-			std_all[i] = np.std(tmp)
-			mean_mice[i] = np.mean(tmp2)
-			std_mice[i] = np.std(tmp2)
+		for g in self.label.keys():		
+		# for g in ['late stage']:
+			fig = figure(figsize=(14,10))
+			for s,i in zip(self.label[g], xrange(len(self.label[g]))):
+				ax = fig.add_subplot(3,5,i+1)				
+				for m in data.keys():
+					mean_time = np.mean(data[m][s], 0)
+					std_time = np.std(data[m][s], 0)					
+					ax.plot(np.arange(len(mean_time)), mean_time, '-', label=m, color = colors[m], linewidth=3)		
+					ax.fill_between(np.arange(len(mean_time)), mean_time-(std_time/2.), mean_time+(std_time/2.), alpha=0.24, color=colors[m])					
+					ax.set_title(s)
+					ax.set_ylabel("Latency", fontsize=8)
+					ax.set_xlabel("Trials", fontsize=8)
+				ax.plot(latency[s.split("_")[0]], 'o-', color = 'red', label='Mouse')
+				if i == 0:
+					legend(bbox_to_anchor=(1.2, 1.05))	
+			tight_layout()
+			savefig(filename+"_group_"+g.replace(" ", "_")+"_test.pdf")
 
-		ax = fig.add_subplot(3,5,15)		
-		ax.plot(np.arange(len(mean_all)), mean_all, 'o-', label='Model')
-		ax.fill_between(np.arange(len(mean_all)), mean_all-(std_all/2.), mean_all+(std_all/2.), alpha=0.5)
-		ax.plot(np.arange(len(mean_mice)), mean_mice, '-', color = 'red', label='Mouse')
+
+		joining = [filename+"_group_"+g.replace(" ", "_")+"_test.pdf" for g in ['late stage', 'late stage approx', 'slow learner']]
+		os.system("pdftk "+" ".join(joining)+" cat output "+"../test/SFERES9_group_test_all_models.pdf")
+			# os.system("evince "+filename+"_group_"+g+"_test.pdf")
+		# # probleme car tout les essais ne font pas la meme taille
+		# mean_all = np.zeros(84)
+		# std_all = np.zeros(84)
+		# mean_mice = np.zeros(84)
+		# std_mice = np.zeros(84)
+		# for i in xrange(84):
+		# 	tmp = []
+		# 	tmp2 = []
+		# 	for s in data.iterkeys():
+		# 		if data[s].shape[1] > i:
+		# 			tmp.append(data[s][:,i])
+		# 			tmp2.append(latency[s.split("_")[0]][i])
+		# 	mean_all[i] = np.mean(tmp)
+		# 	std_all[i] = np.std(tmp)
+		# 	mean_mice[i] = np.mean(tmp2)
+		# 	std_mice[i] = np.std(tmp2)
+
+		# ax = fig.add_subplot(3,5,15)		
+		# ax.plot(np.arange(len(mean_all)), mean_all, 'o-', label='Model')
 		# ax.fill_between(np.arange(len(mean_all)), mean_all-(std_all/2.), mean_all+(std_all/2.), alpha=0.5)
-		ax.legend()
-		tight_layout()
-		savefig(filename)
+		# ax.plot(np.arange(len(mean_mice)), mean_mice, '-', color = 'red', label='Mouse')
+		# ax.fill_between(np.arange(len(mean_all)), mean_all-(std_all/2.), mean_all+(std_all/2.), alpha=0.5)
+
+
+
 
 					

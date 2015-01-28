@@ -44,8 +44,12 @@ front.extractBestLog()
 front.write(options.input)
 
 
-sys.exit()
 
+
+
+
+
+sys.exit()
 fig = figure()
 m = 'VMWM'
 for i in xrange(len(front.p_order[m])):
