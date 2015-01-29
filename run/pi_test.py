@@ -20,26 +20,32 @@ parameters = {'beta': 20.405800000000001,
 model = PI(parameters)
 
 wrap = TYMaze(model)
-world = wrap.world
-# wrap.guidage()
-# sys.exit()
-# for i in xrange(1):
-# 	model.startTrial()
-# 	wrap.world.startingPos()
-# 	for j in xrange(10):	
-# 		possible = wrap.world.readPathwaysALaLouche()
-# 		print "position=",world.mousePos," Possible=",possible
-# 		action = model.chooseAction(world.mousePos, wrap.pos_to_state[wrap.world.mousePos], wrap.world.readPathwaysALaLouche())
-# 		# # p_a = model.computeValue(s, a, possible)		
 
-# 		# print "qvalues=",model.q_values[possible==1]
-# 		# print "action=",action
-# 		wrap.move(action)		
-# 		reward = wrap.world.readRew()
-# 		model.updateValue(reward, wrap.pos_to_state[wrap.world.mousePos])
-# 		print "V(pos)=", model.varPos
-# 		print "V(goal)=",model.varGoal
+world = wrap.world
+wrap.guidage()
+# sys.exit()
+for i in xrange(1):
+	model.startTrial()
+	wrap.world.startingPos()
+	for j in xrange(10):	
+		possible = wrap.world.readPathwaysALaLouche()
+		print "position=",world.mousePos," Possible=",possible
+		action = model.chooseAction(world.mousePos, wrap.pos_to_state[wrap.world.mousePos], wrap.world.readPathwaysALaLouche())
+		# # p_a = model.computeValue(s, a, possible)		
+
+		# print "qvalues=",model.q_values[possible==1]
+		# print "action=",action
+		wrap.move(action)		
+		reward = wrap.world.readRew()
+		model.updateValue(reward, wrap.pos_to_state[wrap.world.mousePos])
+
+	if reward == 0:
+		wrap.guidage()
+
+		# print "V(pos)=", model.varPos
+		# print "V(goal)=",model.varGoal
 # 		sys.stdin.readline()
+
 
 
 

@@ -284,38 +284,61 @@ class PI():
 							"beta":[0.0, 200.0],
 							"eta":[0.0, 0.99999999999]})		
 		# Values initialization
-		self.transition = {('10', 'I', 1): '2',
-							('10', 'I', 3): '1b',
-							('10', 'II', 1): '9b',
-							('10', 'II', 3): '8',
-							('1a', '1b', 0): 'I',
-							('1b', 'I', 1): '10',
-							('1b', 'I', 3): '2',
-							('2', 'I', 1): '1b',
-							('2', 'I', 3): '10',
-							('2', 'V', 1): '4',
-							('2', 'V', 3): '3b',
-							('3a', '3b', 0): 'V',
-							('3b', 'V', 1): '2',
-							('3b', 'V', 3): '4',
-							('4', 'V', 1): '3b',
-							('4', 'V', 3): '2',
-							('8', 'II', 1): '10',
-							('8', 'II', 3): '9b',
-							('9a', '9b', 0): 'II',
-							('9b', 'II', 1): '8',
-							('9b', 'II', 3): '10',
-							('I', '10', 0): 'II',
-							('I', '1b', 0): '1a',
-							('I', '2', 0): 'V',
-							('II', '10', 0): 'I',
-							('II', '8', 0): 'III',
-							('II', '9b', 0): '9a',
-							('III', '8', 0): 'II',
-							('IV', '4', 0): 'V',
-							('V', '2', 0): 'I',
-							('V', '3b', 0): '3a',
-							('V', '4', 0): 'IV'}
+		self.transition = {('1a','1b',0):1,
+							('1a','1b',2):2,
+							('9a','9b',0):1,
+							('9a','9b',2):2,
+							('3a','3b',0):1,
+							('3a','3b',2):2,
+							('III','8',0):2,
+							('III','8',2):1,
+							('IV','4',0):2,
+							('IV','4',2):1,							
+							('I','1b',0):2,
+							('I','1b',2):1,
+							('I','10',0):1,
+							('I','10',2):2,
+							('I','2',0):1,
+							('I','2',2):2,
+							('II','9b',0):2,
+							('II','9b',2):1,
+							('II','8',0):1,
+							('II','8',2):2,
+							('II','10',0):2,
+							('II','10',2):1,
+							('V','2',0):2,
+							('V','2',2):1,
+							('V','3b',0):2,
+							('V','3b',2):1,
+							('V','4',0):1,
+							('V','4',2):2,
+							('1b','I',3):1,
+							('1b','I',1):2,
+							('1b','I',2):3,
+							('10','I',1):1,
+							('10','I',2):2,
+							('10','I',3):3,
+							('2','I',2):1,
+							('2','I',3):2,
+							('2','I',1):3,							
+							('10','II',2):1,
+							('10','II',3):2,
+							('10','II',1):3,
+							('9b','II',3):1,
+							('9b','II',1):2,
+							('9b','II',2):3,
+							('8','II',1):1,
+							('8','II',2):2,
+							('8','II',3):3,							
+							('3b','V',2):1,
+							('3b','V',3):2,
+							('3b','V',1):3,
+							('2','V',3):1,
+							('2','V',1):2,
+							('2','V',2):3,
+							('4','V',1):1,
+							('4','V',2):2,
+							('4','V',3):3}
 		self.alpha = np.linspace(0, 2*np.pi, 60)
 		self.positions = {'10': [-0.19, 0.608],
 						 '1a': [0, 0],
@@ -338,16 +361,106 @@ class PI():
 		self.n_case = 30
 		self.grain = 6./self.n_case	
 		self.grid = np.dstack(np.meshgrid(np.linspace(-3,3,self.n_case+1),np.linspace(-3,3,self.n_case+1), indexing = 'xy'))
-		self.Pgoal = np.zeros((self.n_case, self.n_case))
-		self.Ppos = np.zeros((self.n_case, self.n_case))
-
+		self.Pgoal = np.zeros((self.n_case+1, self.n_case+1))
+		self.Ppos = np.zeros((self.n_case+1, self.n_case+1))
+		self.xy = self.grid.reshape(31*31,2)
+		# Mask init
+		self.mask = {'Y':{p:{i:np.zeros((31,31,31*31)) for i in [1,2,3]} for p in ['I','II','V']}}
+		self.mask['I'] = {p:{i:np.zeros((31,31,31*31)) for i in [1,2]} for p in ['1b','10','2','3b','4','9b','8']}
+		self.next_states = {'V':['4','2','3b'],
+							'I':['2','10','1b'],
+							'II':['8','9b','10'],
+							'1b':['I','1a'],
+							'10':['II','I'],
+							'2':['I','V'],
+							'9b':['II','9a'],
+							'8':['III','II'],
+							'4':['IV','V'],
+							'3b':['V','3a']}
+		self.fillMaskArray()
 		#Various Init
 		self.q_values = None
 		self.current_position = '1a'
+		self.previous_position = '1a'
 		self.current_action = None		
 		self.ind = np.arange(self.n_action)
 		self.reward_position = self.positions['III']		
 		self.reward_found = False
+
+	def fillMaskArray(self):
+		p1 = '1b'
+		for i in xrange(31*31):
+			p = self.xy[i]
+			# cadran 1 upper
+			self.mask['I'][p1][1][:,:,i][self.grid[:,:,1]>p[1]] = 1.0
+			# cadran 2 upper 
+			self.mask['I'][p1][2][:,:,i][self.grid[:,:,1]<p[1]] = 2.0
+
+		for p1 in ['10', '2', '3b', '4', '9b', '8']:
+			direction = self.computeAngle(p1, self.next_states[p1][0])
+			arc = (direction+(np.pi/2.))%(2*np.pi)
+			coeff = np.sin(arc)/np.cos(arc)
+			for i in xrange(31*31):
+				p = self.xy[i]
+				self.mask['I'][p1][1][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))>0] = 1.0
+				self.mask['I'][p1][2][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))<0] = 2.0
+
+		p1 = 'V'
+		direction = np.array([self.computeAngle(p1, p) for p in self.next_states[p1]])
+		#angle du milieu entre deux directions
+		arc = [direction[i]+(direction[i+1]-direction[i])/2. for i in xrange(2)]
+		arc.append(np.mean([direction[0],direction[-1]-2*np.pi]))
+		# rangé dans l'ordre croissant
+		arc = np.sort(arc)
+		# coefficient directeur de la droite
+		coeff = np.array([np.sin(arc[i])/np.cos(arc[i]) for i in xrange(3)])
+		for i in xrange(31*31):
+			p = self.xy[i]	
+			# cadran 1 right
+			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0)] = 1.0
+			# cadran 2 upper
+			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>0)] = 2.0
+			# cadran 3 lower right
+			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 3.0
+
+
+		p1 = 'I'
+		direction = np.array([self.computeAngle(p1, p) for p in self.next_states[p1]])
+		#angle du milieu entre deux directions
+		arc = [direction[i]+(direction[i+1]-direction[i])/2. for i in xrange(2)]
+		arc.append(np.mean([direction[0],direction[-1]-2*np.pi])+2*np.pi)
+		# rangé dans l'ordre croissant
+		arc = np.sort(arc)
+		# coefficient directeur de la droite
+		coeff = np.array([np.sin(arc[i])/np.cos(arc[i]) for i in xrange(3)])
+		# careful ceoff[0] est une droite vertical
+		for i in xrange(31*31):
+			p = self.xy[i]	
+			# cadran 1 right
+			self.mask['Y'][p1][1][:,:,i][(self.grid[:,:,0]>p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0))] = 1.0
+			# cadran 2 left
+			self.mask['Y'][p1][2][:,:,i][(self.grid[:,:,0]<p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0))] = 2.0
+			# cadran 3 lower
+			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 3.0
+
+
+		p1 = 'II'
+		direction = np.array([self.computeAngle(p1, p) for p in self.next_states[p1]])
+		#angle du milieu entre deux directions
+		arc = [direction[i]+(direction[i+1]-direction[i])/2. for i in xrange(2)]
+		arc.append(np.mean([direction[0],direction[-1]-2*np.pi])+2*np.pi)
+		# rangé dans l'ordre croissant
+		arc = np.sort(arc)
+		# coefficient directeur de la droite
+		coeff = np.array([np.sin(arc[i])/np.cos(arc[i]) for i in xrange(3)])		
+		for i in xrange(31*31):
+			p = self.xy[i]	
+			# cadran 1 lower right
+			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 1.0
+			# cadran 2 upper
+			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>0)] = 2.0
+			# cadran 3 left
+			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0)] = 3.0
 
 	def setParameters(self, name, value):            
 		if value < self.bounds[name][0]:
@@ -368,6 +481,7 @@ class PI():
 
 	def startTrial(self):
 		self.current_position = '1a'
+		self.previous_position = '1a'
 		self.current_action = None		
 
 	def softMax(self, values):
@@ -414,7 +528,12 @@ class PI():
 		for y in xrange(self.n_case):
 			for x in xrange(self.n_case):
 				self.Pgoal[y,x] = self.cdf_multi(self.grid[y,x],self.grid[y+1,x+1], self.reward_position, self.varGoal)
-				
+
+	def fill_PPos(self):
+		for y in xrange(self.n_case):
+			for x in xrange(self.n_case):
+				self.Ppos[y,x] = self.cdf_multi(self.grid[y,x],self.grid[y+1,x+1], self.positions[self.current_position], self.varPos)
+
 	def computeValue(self, position, state, a, possible):
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
 		self.current_position = position
@@ -428,17 +547,21 @@ class PI():
 
 	def chooseAction(self, position, state, possible):		
 		self.current_position = position
+		self.fill_PPos()
 		ind = self.ind[possible==1]
-		if self.reward_found:
-			pass
-		else:
-			self.q_values = np.ones(len(ind))
+		self.q_values = np.ones(len(ind))
+		if self.reward_found and len(ind) > 1:			
+			for i in xrange(len(ind)):
+				k = self.transition[(self.previous_position, self.current_position,ind[i])]
+				self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))
+		print self.q_values				
 		self.current_action = ind[self.sampleSoftMax(self.q_values)]
 		return actions[self.current_action]		
 
 	def updateValue(self, reward, next_state):
 		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0		        
 		self.varPos += self.parameters['gamma']
+		self.previous_position = self.current_position
 		if r:
 			self.reward_found = True
 			self.varGoal = (1.0-self.parameters['eta'])*self.varGoal + self.parameters['eta']*self.varPos
