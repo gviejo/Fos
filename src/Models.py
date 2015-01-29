@@ -283,7 +283,40 @@ class PI():
 		self.bounds = dict({"gamma":[0.0, 0.9999999999],
 							"beta":[0.0, 200.0],
 							"eta":[0.0, 0.99999999999]})		
-		# Values initialization				
+		# Values initialization
+		self.transition = {('10', 'I', 1): '2',
+							('10', 'I', 3): '1b',
+							('10', 'II', 1): '9b',
+							('10', 'II', 3): '8',
+							('1a', '1b', 0): 'I',
+							('1b', 'I', 1): '10',
+							('1b', 'I', 3): '2',
+							('2', 'I', 1): '1b',
+							('2', 'I', 3): '10',
+							('2', 'V', 1): '4',
+							('2', 'V', 3): '3b',
+							('3a', '3b', 0): 'V',
+							('3b', 'V', 1): '2',
+							('3b', 'V', 3): '4',
+							('4', 'V', 1): '3b',
+							('4', 'V', 3): '2',
+							('8', 'II', 1): '10',
+							('8', 'II', 3): '9b',
+							('9a', '9b', 0): 'II',
+							('9b', 'II', 1): '8',
+							('9b', 'II', 3): '10',
+							('I', '10', 0): 'II',
+							('I', '1b', 0): '1a',
+							('I', '2', 0): 'V',
+							('II', '10', 0): 'I',
+							('II', '8', 0): 'III',
+							('II', '9b', 0): '9a',
+							('III', '8', 0): 'II',
+							('IV', '4', 0): 'V',
+							('V', '2', 0): 'I',
+							('V', '3b', 0): '3a',
+							('V', '4', 0): 'IV'}
+		self.alpha = np.linspace(0, 2*np.pi, 60)
 		self.positions = {'10': [-0.19, 0.608],
 						 '1a': [0, 0],
 						 '1b': [0.0, 0.235],
@@ -361,7 +394,8 @@ class PI():
 	def computeAngle(self, s1, s2):
 		x = self.positions[s2][0]-self.positions[s1][0]
 		y = self.positions[s2][1]-self.positions[s1][1]
-		return np.arctan2(y, x)
+		return (np.arctan2(y, x)+2*np.pi)%(2*np.pi)
+		# return np.arctan2(y,x)
 
 	def cdf_multi(self, lower, upper, mu, cov):
 	    # lower = [x0,y0]

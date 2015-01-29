@@ -21,26 +21,27 @@ model = PI(parameters)
 
 wrap = TYMaze(model)
 world = wrap.world
-wrap.guidage()
-sys.exit()
-for i in xrange(1):
-	model.startTrial()
-	wrap.world.startingPos()
-	for j in xrange(10):	
-		possible = wrap.world.readPathwaysALaLouche()
-		print "position=",world.mousePos," Possible=",possible
-		action = model.chooseAction(world.mousePos, wrap.pos_to_state[wrap.world.mousePos], wrap.world.readPathwaysALaLouche())
-		# # p_a = model.computeValue(s, a, possible)		
+# wrap.guidage()
+# sys.exit()
+# for i in xrange(1):
+# 	model.startTrial()
+# 	wrap.world.startingPos()
+# 	for j in xrange(10):	
+# 		possible = wrap.world.readPathwaysALaLouche()
+# 		print "position=",world.mousePos," Possible=",possible
+# 		action = model.chooseAction(world.mousePos, wrap.pos_to_state[wrap.world.mousePos], wrap.world.readPathwaysALaLouche())
+# 		# # p_a = model.computeValue(s, a, possible)		
 
-		# print "qvalues=",model.q_values[possible==1]
-		# print "action=",action
-		wrap.move(action)		
-		reward = wrap.world.readRew()
-		model.updateValue(reward, wrap.pos_to_state[wrap.world.mousePos])
-		print "V(pos)=", model.varPos
-		print "V(goal)=",model.varGoal
-		sys.stdin.readline()
-# # rec(0, [])
+# 		# print "qvalues=",model.q_values[possible==1]
+# 		# print "action=",action
+# 		wrap.move(action)		
+# 		reward = wrap.world.readRew()
+# 		model.updateValue(reward, wrap.pos_to_state[wrap.world.mousePos])
+# 		print "V(pos)=", model.varPos
+# 		print "V(goal)=",model.varGoal
+# 		sys.stdin.readline()
+
+
 
 # transition = set()
 
@@ -72,22 +73,23 @@ for i in xrange(1):
 # world.moveALaLouche(0)
 # for a in [0,1,0,1,0,2,0,1,0,2,0,1,0,1,0,1,0,2,0,1,0,2,0,1,0,1,0,2]:
 # 	position = world.mousePos
+# 	# if (old_position,position,a) in tmp.keys():
+# 	# 	tmp[(old_position,position,a)] = [world.mouseDir]
+# 	world.moveALaLouche(a)	
 # 	if (old_position,position,a) in tmp.keys():
-# 		tmp[(old_position,position,a)] = [world.mouseDir]
-# 	world.moveALaLouche(a)
-# 	if (old_position,position,a) in tmp.keys():
-# 		tmp[(old_position,position,a)].append(world.mouseDir)
+# 		tmp[(old_position,position,a)] = world.mousePos
 # 	old_position = position	
+
 
 # world.startingPos()
 # old_position = world.mousePos
 # world.moveALaLouche(0)
 # for a in [0,3,0,3,0,2,0,3,0,2,0,3,0,3,0,3,0,2,0,3,0,2,0,3,0,3,0,2]:
 # 	position = world.mousePos
-# 	if (old_position,position,a) in tmp.keys():
-# 		tmp[(old_position,position,a)] = [world.mouseDir]
+# 	# if (old_position,position,a) in tmp.keys():
+# 	# 	tmp[(old_position,position,a)] = [world.mouseDir]
 # 	world.moveALaLouche(a)
 # 	if (old_position,position,a) in tmp.keys():
-# 		tmp[(old_position,position,a)].append(world.mouseDir)
+# 		tmp[(old_position,position,a)] = world.mousePos
 # 	old_position = position	
 
