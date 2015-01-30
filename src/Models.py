@@ -338,8 +338,7 @@ class PI():
 							('2','V',2):3,
 							('4','V',1):1,
 							('4','V',2):2,
-							('4','V',3):3}
-		self.alpha = np.linspace(0, 2*np.pi, 60)
+							('4','V',3):3}		
 		self.positions = {'10': [-0.19, 0.608],
 						 '1a': [0, 0],
 						 '1b': [0.0, 0.235],
@@ -478,11 +477,13 @@ class PI():
 	def startExp(self):
 		self.varPos = self.parameters['gamma']
 		self.varGoal = 0.0
+		self.reward_found = False
 
 	def startTrial(self):
 		self.current_position = '1a'
 		self.previous_position = '1a'
-		self.current_action = None		
+		self.varPos = self.parameters['gamma']
+		self.current_action = None				
 
 	def softMax(self, values):
 		tmp = np.exp(values*float(self.parameters['beta']))
@@ -539,8 +540,11 @@ class PI():
 		self.current_position = position
 		self.current_action = a
 		ind = self.ind[possible==1]
-
 		self.q_values = np.ones(len(ind))
+		if self.reward_found and len(ind) > 1:
+			for i in xrange(len(ind)):
+				k = self.transition[(self.previous_position, self.current_position,ind[i])]
+				self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))				
 		p_a = np.zeros(self.n_action)		
 		p_a[ind] = self.softMax(self.q_values)			
 		return p_a[self.current_action]
@@ -554,7 +558,7 @@ class PI():
 			for i in xrange(len(ind)):
 				k = self.transition[(self.previous_position, self.current_position,ind[i])]
 				self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))
-		print self.q_values				
+		# print "In PI: ", self.q_values				
 		self.current_action = ind[self.sampleSoftMax(self.q_values)]
 		return actions[self.current_action]		
 

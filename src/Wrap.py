@@ -73,7 +73,7 @@ class TYMaze():
 		for i in xrange(nb_trial):
 			self.model.startTrial()
 			for j in xrange(len(data[i]['action'])):								
-				pa = self.model.computeValue(data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
+				pa = self.model.computeValue(data[i]['pos'][j], data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
 				loglike[data[i]['ind'][j]] = np.log(pa)
 			if data[i]['reward'][-1] == 0:
@@ -124,7 +124,7 @@ class TYMaze():
 				state = self.pos_to_state[self.world.mousePos]				
 				for j in xrange(self.nb_steps_max):					
 					possible = self.world.readPathwaysALaLouche()
-					action = self.model.chooseAction(state, possible)
+					action = self.model.chooseAction(self.world.mousePos, state, possible)
 					self.move(action)
 					state = self.pos_to_state[self.world.mousePos]					
 					reward = self.world.readRew()
