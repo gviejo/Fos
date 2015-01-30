@@ -359,7 +359,7 @@ class PI():
 		# Matrix init
 		self.n_case = 30
 		self.grain = 6./self.n_case	
-		self.grid = np.dstack(np.meshgrid(np.linspace(-3,3,self.n_case+1),np.linspace(-3,3,self.n_case+1), indexing = 'xy'))
+		self.grid = np.dstack(np.meshgrid(np.linspace(-3,3,self.n_case+1),np.linspace(-3,3,self.n_case+1)))
 		self.Pgoal = np.zeros((self.n_case+1, self.n_case+1))
 		self.Ppos = np.zeros((self.n_case+1, self.n_case+1))
 		self.xy = self.grid.reshape(31*31,2)
@@ -546,10 +546,8 @@ class PI():
 			for i in xrange(len(ind)):				
 				k = self.transition[(self.previous_position, self.current_position,ind[i])]
 				self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))				
-		p_a = np.zeros(self.n_action)
-		print self.q_values		
+		p_a = np.zeros(self.n_action)		
 		p_a[ind] = self.softMax(self.q_values)
-		print p_a
 		return p_a[self.current_action]
 
 	def chooseAction(self, position, state, possible):		
