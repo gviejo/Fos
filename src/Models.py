@@ -538,15 +538,18 @@ class PI():
 	def computeValue(self, position, state, a, possible):
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
 		self.current_position = position
+		self.fill_PPos()
 		self.current_action = a
 		ind = self.ind[possible==1]
 		self.q_values = np.ones(len(ind))
 		if self.reward_found and len(ind) > 1:
-			for i in xrange(len(ind)):
+			for i in xrange(len(ind)):				
 				k = self.transition[(self.previous_position, self.current_position,ind[i])]
 				self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))				
-		p_a = np.zeros(self.n_action)		
-		p_a[ind] = self.softMax(self.q_values)			
+		p_a = np.zeros(self.n_action)
+		print self.q_values		
+		p_a[ind] = self.softMax(self.q_values)
+		print p_a
 		return p_a[self.current_action]
 
 	def chooseAction(self, position, state, possible):		
