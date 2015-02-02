@@ -393,7 +393,7 @@ class PI():
 			# cadran 1 upper
 			self.mask['I'][p1][1][:,:,i][self.grid[:,:,1]>p[1]] = 1.0
 			# cadran 2 upper 
-			self.mask['I'][p1][2][:,:,i][self.grid[:,:,1]<p[1]] = 2.0
+			self.mask['I'][p1][2][:,:,i][self.grid[:,:,1]<p[1]] = 1.0
 
 		for p1 in ['10', '2', '3b', '4', '9b', '8']:
 			direction = self.computeAngle(p1, self.next_states[p1][0])
@@ -402,7 +402,7 @@ class PI():
 			for i in xrange(31*31):
 				p = self.xy[i]
 				self.mask['I'][p1][1][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))>0] = 1.0
-				self.mask['I'][p1][2][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))<0] = 2.0
+				self.mask['I'][p1][2][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))<0] = 1.0
 
 		p1 = 'V'
 		direction = np.array([self.computeAngle(p1, p) for p in self.next_states[p1]])
@@ -418,9 +418,9 @@ class PI():
 			# cadran 1 right
 			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0)] = 1.0
 			# cadran 2 upper
-			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>0)] = 2.0
+			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>0)] = 1.0
 			# cadran 3 lower right
-			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 3.0
+			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 1.0
 
 
 		p1 = 'I'
@@ -438,9 +438,9 @@ class PI():
 			# cadran 1 right
 			self.mask['Y'][p1][1][:,:,i][(self.grid[:,:,0]>p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0))] = 1.0
 			# cadran 2 left
-			self.mask['Y'][p1][2][:,:,i][(self.grid[:,:,0]<p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0))] = 2.0
+			self.mask['Y'][p1][2][:,:,i][(self.grid[:,:,0]<p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0))] = 1.0
 			# cadran 3 lower
-			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 3.0
+			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 1.0
 
 
 		p1 = 'II'
@@ -457,9 +457,9 @@ class PI():
 			# cadran 1 lower right
 			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 1.0
 			# cadran 2 upper
-			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>0)] = 2.0
+			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>0)] = 1.0
 			# cadran 3 left
-			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0)] = 3.0
+			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0)] = 1.0
 
 	def setParameters(self, name, value):            
 		if value < self.bounds[name][0]:

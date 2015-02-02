@@ -33,49 +33,36 @@ extern "C" {
 	int mvndst_(int *, double (*)[2], double (*)[2], int (*)[2], double *, int *,
                 double *, double *, double *, double *, int *);
 }
-void softmax(double *p, double *v, double b) {
+void softmax(double *p, double *v, double beta, int n) {
 	double sum = 0.0;
-	double tmp[5];
-	// for (int i=0;i<5;i++) std::cout << v[i] << " "; std::cout << std::endl;
-	for (int i=0;i<5;i++) {
-		tmp[i] = exp(v[i]*b);
-		sum+=tmp[i];		
-	}		
-	// for (int i=0;i<5;i++) std::cout << tmp[i] << " "; std::cout << std::endl;
-	for (int i=0;i<5;i++) {
-		p[i] = tmp[i]/sum;		
-	}
-	// for (int i=0;i<5;i++) std::cout << p[i] << " "; std::cout << std::endl;
-	// int ind=-1;
-	// for (int i=0;i<5;i++) {
-	// 	if (isnan(p[i])) {
-	// 		ind = i;
-	// 		break;
-	// 	}
-	// }
-	// // std::cout << ind << std::endl;
-	// if (ind!=-1) {
-	// 	for (int i=0;i<5;i++) {
-	// 		p[i] = 0.0001;
-	// 	}
-	// }
-	// p[ind] = 0.9996;
-	// for (int i=0;i<5;i++) std::cout << p[i] << " "; std::cout << std::endl;
-	// std::cout << ind << std::endl;
-	// std::cout << std::endl;
-	for (int i=0;i<5;i++) {
-		if (p[i] == 0) {
-			sum = 0.0;
-			for (int i=0;i<5;i++) {
-				p[i]+=1e-4;
-				sum+=p[i];
-			}
-			for (int i=0;i<5;i++) {
-				p[i]/=sum;
-			}
-			return;
+	double tmp[n];
+	int have_inf=0;
+	for (int i=0;i<n;i++) {
+		tmp[i] = exp(v[i]*beta);
+		if isinf(tmp[i]) {
+			have_inf = 1;
+			tmp[i]=1.0-double(n)*1e-8;
 		}
-	}	
+		sum+=tmp[i];		
+	}			
+	if (have_inf==1) {
+		for (int i=0;i<n;i++) tmp[i] += 1e-8;			
+	}
+	int have_zero=0;
+	for (int i=0;i<n;i++) {
+		p[i] = tmp[i]/sum;
+		if (p[i]==0.0) have_zero=1;
+	}
+	if (have_zero==1) {
+		sum = 0.0;
+		for (int i=0;i<n;i++) {
+			p[i] += 1e-8;
+			sum+=p[i];
+		}
+		for (int i=0;i<n;i++) {
+			p[i] = p[i]/sum;			
+		}
+	}
 }
 double sum_prod(double *a, double *b, int n) {
 	double tmp = 0.0;
@@ -140,28 +127,28 @@ double in_action(double xp, double yp, double xt, double yt, int a, int p, int p
 	// std::cout << "P(x,y)="<<xp<<","<<yp << " P(test)="<<xt<<","<<yt << " action="<< a << " pos="<< p << " prev_pos=" << pp << std::endl;
 	if (p==1) { // 1b
 		double delta=yt-yp;
-		if (pp==0 && a==0 && delta>0) return 1;
-		else if (pp==2 && a==0 && delta<0) return 1;
-		else if (pp==0 && a==2 && delta<0) return 1;			
-		else if (pp==2 && a==2 && delta>0) return 1;
+		if (pp==0 && a==0 && delta>0) return 1.0;
+		else if (pp==2 && a==0 && delta<0) return 1.0;
+		else if (pp==0 && a==2 && delta<0) return 1.0;			
+		else if (pp==2 && a==2 && delta>0) return 1.0;
 	}
 	else if (p==2) {
 		double d14 = yt-(xt*coeff14+(yp-coeff14*xp));
 		double d31 = yt-(xt*coeff31+(yp-coeff31*xp));
 		if (pp==1) {
-			if (a==3 && xt > xp && d14>0) return 1;			
-			else if (a==1 && xt < xp && d31>0) return 1;
-			else if (a==2 && d14<0 && d31<0) return 1;
+			if (a==3 && xt > xp && d14>0) return 1.0;			
+			else if (a==1 && xt < xp && d31>0) return 1.0;
+			else if (a==2 && d14<0 && d31<0) return 1.0;
 		}
 		else if (pp==3) {
-			if (a==1 && xt > xp && d14>0) return 1;			
-			else if (a==2 && xt < xp && d31>0) return 1;
-			else if (a==3 && d14<0 && d31<0) return 1;
+			if (a==1 && xt > xp && d14>0) return 1.0;			
+			else if (a==2 && xt < xp && d31>0) return 1.0;
+			else if (a==3 && d14<0 && d31<0) return 1.0;
 		}
 		else if (pp==4) {
-			if (a==2 && xt > xp && d14>0) return 1;			
-			else if (a==3 && xt < xp && d31>0) return 1;
-			else if (a==1 && d14<0 && d31<0) return 1;
+			if (a==2 && xt > xp && d14>0) return 1.0;			
+			else if (a==3 && xt < xp && d31>0) return 1.0;
+			else if (a==1 && d14<0 && d31<0) return 1.0;
 		}
 	}
 	else if (p==8) {
@@ -169,19 +156,19 @@ double in_action(double xp, double yp, double xt, double yt, int a, int p, int p
 		double d124 = yt-(xt*coeff124+(yp-coeff124*xp));
 		double d49 = yt-(xt*coeff49+(yp-coeff49*xp));
 		if (d49>0 && d912<0) { // first cadran
-			if (pp==12 && a==1) return 1;
-			else if (pp==4 && a==3) return 1;			
-			else if (pp==9 && a==2) return 1;
+			if (pp==12 && a==1) return 1.0;
+			else if (pp==4 && a==3) return 1.0;			
+			else if (pp==9 && a==2) return 1.0;
 		}
 		else if (d124>0 && d912>0) { // second cadran
-			if (pp==12 && a==2) return 1;
-			else if (pp==4 && a==1) return 1;			
-			else if (pp==9 && a==3) return 1;
+			if (pp==12 && a==2) return 1.0;
+			else if (pp==4 && a==1) return 1.0;			
+			else if (pp==9 && a==3) return 1.0;
 		}
 		else if (d124<0 && d49>0) { // third cadran
-			if (pp==12 && a==3) return 1;
-			else if (pp==4 && a==0) return 1;			
-			else if (pp==9 && a==1) return 1;
+			if (pp==12 && a==3) return 1.0;
+			else if (pp==4 && a==0) return 1.0;			
+			else if (pp==9 && a==1) return 1.0;
 		}
 	}
 	else if (p==7) {
@@ -189,33 +176,88 @@ double in_action(double xp, double yp, double xt, double yt, int a, int p, int p
 		double d116 = yt-(xt*coeff116+(yp-coeff116*xp));
 		double d63 = yt-(xt*coeff63+(yp-coeff63*xp));
 		if (d63<0 && d311<0) { // first cadran
-			if (pp==3 && a==2) return 1;
-			else if (pp==11 && a==1) return 1;			
-			else if (pp==6 && a==3) return 1;
+			if (pp==3 && a==2) return 1.0;
+			else if (pp==11 && a==1) return 1.0;			
+			else if (pp==6 && a==3) return 1.0;
 		}
 		else if (d311>0 && d116>0) { // second cadran
-			if (pp==3 && a==3) return 1;
-			else if (pp==11 && a==2) return 1;			
-			else if (pp==6 && a==1) return 1;
+			if (pp==3 && a==3) return 1.0;
+			else if (pp==11 && a==2) return 1.0;			
+			else if (pp==6 && a==1) return 1.0;
 		}
 		else if (d116<0 && d63>0) { // third cadran
-			if (pp==3 && a==1) return 1;
-			else if (pp==11 && a==3) return 1;			
-			else if (pp==6 && a==2) return 1;
+			if (pp==3 && a==1) return 1.0;
+			else if (pp==11 && a==3) return 1.0;			
+			else if (pp==6 && a==2) return 1.0;
 		}
 	}
 	else if (p==3) {
 		double d = yt-(xt*coeff3+(yp-coeff3*xp));
 		if (d>0) {
-			if (pp==2 && a==0) return 1;
-			else if (pp=7 && a==2) return 1;			
+			if (pp==2 && a==0) return 1.0;
+			else if (pp==7 && a==2) return 1.0;			
 		}
 		else if (d<0) {
-			if (pp==2 && a==2) return 1;
-			else if (pp=7 && a==0) return 1;			
+			if (pp==2 && a==2) return 1.0;
+			else if (pp==7 && a==0) return 1.0;			
 		}
 	}
-	return 0;
+	else if (p==4) {
+		double d = yt-(xt*coeff4+(yp-coeff4*xp));
+		if (d>0) {
+			if (pp==2 && a==0) return 1.0;
+			else if (pp==8 && a==2) return 1.0;			
+		}
+		else if (d<0) {
+			if (pp==2 && a==2) return 1.0;
+			else if (pp==8 && a==0) return 1.0;			
+		}
+	}
+	else if (p==6) {
+		double d = yt-(xt*coeff6+(yp-coeff6*xp));
+		if (d>0) {
+			if (pp==5 && a==0) return 1.0;
+			else if (pp==7 && a==2) return 1.0;			
+		}
+		else if (d<0) {
+			if (pp==5 && a==2) return 1.0;
+			else if (pp==7 && a==0) return 1.0;			
+		}
+	}
+	else if (p==9) {
+		double d = yt-(xt*coeff9+(yp-coeff9*xp));
+		if (d>0) {
+			if (pp==10 && a==0) return 1.0;
+			else if (pp==8 && a==2) return 1.0;			
+		}
+		else if (d<0) {
+			if (pp==10 && a==2) return 1.0;
+			else if (pp==8 && a==0) return 1.0;			
+		}
+	}
+	else if (p==11) {
+		double d = yt-(xt*coeff11+(yp-coeff11*xp));
+		if (d>0) {
+			if (pp==7 && a==0) return 1.0;
+			else if (pp==13 && a==2) return 1.0;			
+		}
+		else if (d<0) {
+			if (pp==7 && a==2) return 1.0;
+			else if (pp==13 && a==0) return 1.0;			
+		}
+	}
+	else if (p==12) {
+		double d = yt-(xt*coeff12+(yp-coeff12*xp));
+		if (d>0) {
+			if (pp==8 && a==0) return 1.0;
+			else if (pp==14 && a==2) return 1.0;			
+		}
+		else if (d<0) {
+			if (pp==8 && a==2) return 1.0;
+			else if (pp==14 && a==0) return 1.0;			
+		}
+	}
+	return 0.0;
 }
 double sferes_call(double * fit, const int N, const char* data_dir, double beta_, double gamma_, double eta_)
 {	
@@ -293,7 +335,7 @@ double sferes_call(double * fit, const int N, const char* data_dir, double beta_
 			grid[i*n_case+j][0] = xstart;
 			grid[i*n_case+j][1] = ystart;
 			xstart+=0.2;
-			p_goal[i*n_case+j] = 1.0;
+			p_goal[i*n_case+j] = 0.0;
 		}
 		ystart+=0.2;
 	}
@@ -321,9 +363,11 @@ double sferes_call(double * fit, const int N, const char* data_dir, double beta_
 			action = sarp[index][2];
 			reward = sarp[index][3];
 			// std::cout << "trial=" << tr <<","<<st<< " pos=" << pos << " state=" << state << " action=" << action << " reward=" << reward << " nb_possible=" << nb_possible << " vPos=" << varPos << " vG=" << varGoal << std::endl;
+						
 			// COMPUTE VALUE
 			if (nb_possible>1) {
 				double q_values [nb_possible];
+				double p_a [nb_possible];
 				for (int j=0;j<nb_possible;j++) {
 					q_values[j] = 0.0;										
 					// on regarde chaque position pour decider
@@ -338,8 +382,16 @@ double sferes_call(double * fit, const int N, const char* data_dir, double beta_
 						q_values[j] += (subspace*Ppos);
 					}
 					
-				}			
-			}			
+				}
+				softmax(p_a, q_values, beta, nb_possible);
+				// for (int j=0;j<nb_possible;j++) std::cout << "," << q_values[j]; std::cout << std::endl;
+				// for (int j=0;j<nb_possible;j++) std::cout << "," << p_a[j];	std::cout << std::endl;
+				// ADDING LOGLIKELIHOOD
+				for (int i=0;i<nb_possible;i++) {
+					if (ind_action[i] == action) logLikelihood += log(p_a[i]);
+				}					
+			}		
+
 			// UPDATE VALUE
 			varPos+=gamma;
 			previous_pos = pos;
@@ -359,9 +411,9 @@ double sferes_call(double * fit, const int N, const char* data_dir, double beta_
 			varGoal = (1.0-eta)*varGoal + eta * varPos;
 		}
 		index+=1;
-		// std::cout << std::endl;
+		 // std::cout << std::endl;
 	}
-
+	fit[0] = logLikelihood;
 
 	
 	// if (isnan(fit[0]) || isinf(fit[0]) || isinf(fit[1]) || isnan(fit[1]) || fit[0]<-10000 || fit[1]<-10000) {
