@@ -101,7 +101,7 @@ class VMWM():
 		tmp = [np.sum(p_a[0:i]) for i in range(len(p_a))]
 		return np.sum(np.array(tmp) < np.random.rand())-1 
 
-	def computeValue(self, state, a, possible):
+	def computeValue(self, pos, state, a, possible):
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
 		self.current_state = self.convert[state+"".join(self.last_actions)]
 		self.current_action = a
@@ -111,7 +111,7 @@ class VMWM():
 		p_a[ind] = self.softMax(q_values)			
 		return p_a[self.current_action]
 
-	def chooseAction(self, state, possible):
+	def chooseAction(self, pos, state, possible):
 		self.current_state = self.convert[state+"".join(self.last_actions)]
 		ind = self.ind[possible==1]
 		q_values = self.actor[self.current_state][possible==1]		
@@ -212,7 +212,7 @@ class Graph():
 		else:
 			return
 
-	def computeValue(self, state, a, possible):
+	def computeValue(self, pos, state, a, possible):
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
 		self.current_state = self.states[self.current_node]
 		if self.current_state != state:
@@ -227,7 +227,7 @@ class Graph():
 		p_a[ind] = self.softMax(self.q_values[possible==1])			
 		return p_a[self.current_action]
 
-	def chooseAction(self, state, possible):
+	def chooseAction(self, pos, state, possible):
 		self.current_state = self.states[self.current_node]		
 		if self.current_state != state:
 			print "problem"
@@ -354,7 +354,7 @@ class PI():
 						 'III': [-0.235, 1.193],
 						 'IV': [0.235, 1.193],
 						 'V': [0.38, 0.746]}
-		self.varPos = self.parameters['gamma']
+		self.varPos = 0.0
 		self.varGoal = 0.0				
 		# Matrix init
 		self.n_case = 30
@@ -545,7 +545,9 @@ class PI():
 		if self.reward_found and len(ind) > 1:
 			for i in xrange(len(ind)):				
 				k = self.transition[(self.previous_position, self.current_position,ind[i])]
-				self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))				
+				tmp = np.sum(np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal),1), 0)				
+				self.q_values[i] = np.sum(tmp * self.Ppos.flatten())
+				# self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))				
 		p_a = np.zeros(self.n_action)		
 		p_a[ind] = self.softMax(self.q_values)
 		return p_a[self.current_action]
