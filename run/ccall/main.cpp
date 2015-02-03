@@ -31,7 +31,7 @@ int main () {
 	// int inform;
 	// mvndst_(&N, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);
 	// std::cout << value << " " << error << " " << inform << std::endl;
-  	sferes_call(fit, N, "data_txt/B137_52/", 0.261945, 0.0227431, 0.1);
+  	sferes_call(fit, N, "data_txt/B137_52/", 0.1, 0.1, 0.1);
   	std::cout << fit[0] << std::endl;
 
    	return 0;

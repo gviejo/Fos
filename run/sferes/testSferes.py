@@ -27,9 +27,10 @@ with open(options.input, 'rb') as handle:
 	parameters = pickle.load(handle)
 
 models = {'VMWM':VMWM(),
-		'Graph':Graph()}
-wrap = TYMaze(VMWM())
-nb_exp = 100
+		'Graph':Graph(),
+		'PI':PI()}
+
+nb_exp = 20
 data = {}
 for m in parameters.keys():
 	wrap = TYMaze(models[m])
@@ -43,7 +44,7 @@ for m in parameters.keys():
 		# wrap.plot(data[s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
 
 
-with open("data_tmp", 'rb') as handle:
+with open("data_tmp2", 'rb') as handle:
 	data = pickle.load(handle)
 wrap.plotall(data, latency, "../test/"+options.input.split("_")[0])
 

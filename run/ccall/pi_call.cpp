@@ -88,12 +88,12 @@ void get_exactPosition(double *xy, int pos) {
 	else if (pos==13) {xy[0]=-0.235;xy[1]=1.193;}
 	else if (pos==14) {xy[0]=0.235;xy[1]=1.193;}						 
 }
-double compute_Ppos(double x, double y, int pos, double varPos) {
+double compute_Ppos(double x, double y, int pos, double varPos, double grain) {
 	double meanxy [2];
 	double stdev = sqrt(varPos);
 	get_exactPosition(meanxy, pos);	
 	double lower [2] = {(x-meanxy[0])/stdev, (y-meanxy[1])/stdev};
-	double upper [2] = {(x+0.2-meanxy[0])/stdev, (y+0.2-meanxy[1])/stdev};
+	double upper [2] = {(x+grain-meanxy[0])/stdev, (y+grain-meanxy[1])/stdev};
 	// int dim = 2;	
 	// int infin [2] = {2,2};
 	// double correl = 0.0;
@@ -106,11 +106,11 @@ double compute_Ppos(double x, double y, int pos, double varPos) {
 	mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);
 	return value;	
 }
-double compute_PGoal(double x, double y, double varGoal) {
+double compute_PGoal(double x, double y, double varGoal, double grain) {
 	double meanxy [2] = {-0.235,1.193};
 	double stdev = sqrt(varGoal);	
 	double lower [2] = {(x-meanxy[0])/stdev, (y-meanxy[1])/stdev};
-	double upper [2] = {(x+0.2-meanxy[0])/stdev, (y+0.2-meanxy[1])/stdev};
+	double upper [2] = {(x+grain-meanxy[0])/stdev, (y+grain-meanxy[1])/stdev};
 	// int dim = 2;	
 	// int infin [2] = {2,2};
 	// double correl = 0.0;
@@ -155,19 +155,20 @@ double in_action(double xp, double yp, double xt, double yt, int a, int p, int p
 		double d912 = yt-(xt*coeff912+(yp-coeff912*xp));
 		double d124 = yt-(xt*coeff124+(yp-coeff124*xp));
 		double d49 = yt-(xt*coeff49+(yp-coeff49*xp));
+		// std::cout << d912 << " " << d124 << " " << d49 << std::endl;
 		if (d49>0 && d912<0) { // first cadran
 			if (pp==12 && a==1) return 1.0;
 			else if (pp==4 && a==3) return 1.0;			
 			else if (pp==9 && a==2) return 1.0;
 		}
-		else if (d124>0 && d912>0) { // second cadran
+		else if (d124>0 && d912>0) { // second cadran			
 			if (pp==12 && a==2) return 1.0;
 			else if (pp==4 && a==1) return 1.0;			
 			else if (pp==9 && a==3) return 1.0;
 		}
-		else if (d124<0 && d49>0) { // third cadran
+		else if (d124<0 && d49<0) { // third cadran
 			if (pp==12 && a==3) return 1.0;
-			else if (pp==4 && a==0) return 1.0;			
+			else if (pp==4 && a==2) return 1.0;			
 			else if (pp==9 && a==1) return 1.0;
 		}
 	}
@@ -259,21 +260,22 @@ double in_action(double xp, double yp, double xt, double yt, int a, int p, int p
 	}
 	return 0.0;
 }
-double sferes_call(double * fit, const int N, const char* data_dir, double beta_, double gamma_, double eta_)
+void sferes_call(double * fit, const int N, const char* data_dir, double beta_, double gamma_, double eta_)
 {	
 	///////////////////
 	// parameters
 	double beta=0.0+beta_*(200.0-0.0);
 	double gamma=0.0+gamma_*(1.0-0.0);	
 	double eta=0.0+(1.0-0.0)*eta_;		
-
+	// std::cout << beta << " " << gamma << " " << eta << std::endl;
 	int n_state = 3;
 	int n_action = 4;
 	int size_trials [N];
 	int nb_points = 0;
 	double varPos = gamma;
 	double varGoal = 0.0;
-	int n_case = 30;	
+	int n_case = 30;
+	double grain = 6.0/double(n_case);
 	double grid [n_case*n_case] [2];
 	double p_goal [n_case*n_case];
 	int reward_position = 13;
@@ -334,36 +336,38 @@ double sferes_call(double * fit, const int N, const char* data_dir, double beta_
 		for (int j=0;j<n_case;j++) {
 			grid[i*n_case+j][0] = xstart;
 			grid[i*n_case+j][1] = ystart;
-			xstart+=0.2;
-			p_goal[i*n_case+j] = 0.0;
+			xstart+=(6./double(n_case));
+			p_goal[i*n_case+j] = 0.0;			
 		}
-		ystart+=0.2;
+		ystart+=(6./double(n_case));
 	}
 
-	
+
 
 	int index = 0;
 	for (int tr=0;tr<N;tr++) {
-	// for (int tr=0;tr<1;tr++) {
+	// for (int tr=0;tr<4;tr++) {
 		// START TRIALS
 		varPos = gamma;
 		previous_pos = 1;
+		// double this_log = 0.0;
 		for (int st=0;st<size_trials[tr]-1;st++) {		
 			nb_possible = 0;
-			int t = 0;
+			int t = 0;		
 			for (int j=4;j<8;j++) {
 				nb_possible+=sarp[index][j];
 				if (sarp[index][j]==1) {
-					ind_action[t] = j-4;
-					t += 1;
+					ind_action[t] = j-4;					
+					t+=1;
 				}			
 			}		
 			pos = sarp[index][0];
 			state = sarp[index][1];
 			action = sarp[index][2];
 			reward = sarp[index][3];
-			// std::cout << "trial=" << tr <<","<<st<< " pos=" << pos << " state=" << state << " action=" << action << " reward=" << reward << " nb_possible=" << nb_possible << " vPos=" << varPos << " vG=" << varGoal << std::endl;
-						
+			// if (tr==3 && st==14) {
+			// 	std::cout << "trial=" << tr <<","<<st<< " pos=" << pos << " state=" << state << " action=" << action << " reward=" << reward << " nb_possible=" << nb_possible << " vPos=" << varPos << " vG=" << varGoal << std::endl;				
+			// }		
 			// COMPUTE VALUE
 			if (nb_possible>1) {
 				double q_values [nb_possible];
@@ -373,57 +377,76 @@ double sferes_call(double * fit, const int N, const char* data_dir, double beta_
 					// on regarde chaque position pour decider
 					for (int k=0;k<n_case*n_case;k++){
 						double subspace = 0.0;
-						double Ppos = compute_Ppos(grid[k][0], grid[k][1], pos, varPos);
+						double Ppos = compute_Ppos(grid[k][0], grid[k][1], pos, varPos, grain);
+						// if (tr==5 && st == 26) {
+						// 	std::cout << Ppos << std::endl;
 						// on regarde chaque position qui sont du coté de l'action
 						for (int l=0;l<n_case*n_case;l++){
 							double in = in_action(grid[k][0], grid[k][1], grid[l][0], grid[l][1], ind_action[j], pos, previous_pos);
-							subspace+=(p_goal[l]*in);															
+							subspace+=(p_goal[l]*in);
+							// if (tr == 3 && st == 14 && j== 0 && k==94) {
+							// 	// std::cout << grid[l][0] << " " << grid[l][1] << " " << in << std::endl;
+							// 	std::cout  << in << std::endl;
+							// }																											
 						}
+						// if (tr ==3 && st==14 && j==0) {
+						// 	std::cout << k << " " << grid[k][0] << " " << grid[k][1] << " " << subspace << std::endl;
+						// // 	// std::cout << subspace << std::endl;
+
+						// }
 						q_values[j] += (subspace*Ppos);
 					}
-					
 				}
-				softmax(p_a, q_values, beta, nb_possible);
-				// for (int j=0;j<nb_possible;j++) std::cout << "," << q_values[j]; std::cout << std::endl;
-				// for (int j=0;j<nb_possible;j++) std::cout << "," << p_a[j];	std::cout << std::endl;
+				
+				softmax(p_a, q_values, beta, nb_possible);				
+				
+				// if (tr == 3 && st==14) {
+				// 	for (int j=0;j<nb_possible;j++) std::cout << q_values[j] << ","; std::cout << std::endl;
+				// }
+					// for (int j=0;j<nb_possible;j++) std::cout << "," << p_a[j];	std::cout << std::endl;
+				
 				// ADDING LOGLIKELIHOOD
 				for (int i=0;i<nb_possible;i++) {
-					if (ind_action[i] == action) logLikelihood += log(p_a[i]);
-				}					
-			}		
-
+					if (ind_action[i] == action) {
+						logLikelihood += log(p_a[i]);
+						// this_log += log(p_a[i]);
+					}
+				}
+			}									
 			// UPDATE VALUE
 			varPos+=gamma;
 			previous_pos = pos;
 			if (reward==1) {
-				varGoal = (1.0-eta)*varGoal + eta * varPos;
+				varGoal = (1.0-eta)*varGoal + eta * varPos;				
 				// FILL PGOAL
 				for (int i=0;i<n_case*n_case;i++) {
-					p_goal[i] = compute_PGoal(grid[i][0], grid[i][1], varGoal);
+					p_goal[i] = compute_PGoal(grid[i][0], grid[i][1], varGoal, grain);
 				}
 			}
 			index+=1;
+
 		}
 		//GUIDAGE
-		if (sarp[index-1][3] == 0) {
-			// std::cout << "guidage" << std::endl;
-			varPos = 6.0*gamma;
-			varGoal = (1.0-eta)*varGoal + eta * varPos;
+		if (sarp[index-1][3] == 0) {			
+			varPos = 7.0*gamma;
+			varGoal = (1.0-eta)*varGoal + eta * varPos;			
+			// FILL PGOAL
+			for (int i=0;i<n_case*n_case;i++) {
+				p_goal[i] = compute_PGoal(grid[i][0], grid[i][1], varGoal, grain);
+			}
 		}
 		index+=1;
-		 // std::cout << std::endl;
-	}
-	fit[0] = logLikelihood;
+		// std::cout << tr << " " << this_log << std::endl;
 
-	
-	// if (isnan(fit[0]) || isinf(fit[0]) || isinf(fit[1]) || isnan(fit[1]) || fit[0]<-10000 || fit[1]<-10000) {
-	// 	fit[0]=-1000.0;
-	// 	fit[1]=-1000.0;
-	// 	return;
-	// }
-	// else {
-	// 	fit[0]+=2000.0;
-	// 	fit[1]+=500.0;
-	// 	return ;
-	// }	
+		// for (int i=0;i<n_case*n_case;i++) {
+		// 	std::cout << grid[i][0] << " " << grid[i][1] << " " << p_goal[i] << std::endl;
+		// }
+
+	}	
+	fit[0] = logLikelihood;	
+
+	if (isnan(fit[0]) || isinf(fit[0]) || fit[0] == 0) {
+		fit[0]=-100000.0;		
+		return;
+	}
 }

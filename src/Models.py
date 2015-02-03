@@ -138,9 +138,9 @@ class Graph():
 		self.parameters = parameters	
 		self.n_action = len(actions)
 		self.n_state = len(states)
-		self.bounds = dict({"gamma":[0.0, 0.9999999999],
+		self.bounds = dict({"gamma":[0.0, 1.0],
 							"beta":[0.0, 200.0],
-							"eta":[0.0, 0.99999999999]})		
+							"eta":[0.0, 1.0]})		
 		# Graph initialization		
 		self.nodes = {0:np.zeros(self.n_action,dtype=int)} # node : [node1,0,node4,0]
 		self.states = {0:'U'}
@@ -355,17 +355,18 @@ class PI():
 						 'IV': [0.235, 1.193],
 						 'V': [0.38, 0.746]}
 		self.varPos = 0.0
+
 		self.varGoal = 0.0				
 		# Matrix init
-		self.n_case = 30
+		self.n_case = 10
 		self.grain = 6./self.n_case	
-		self.grid = np.dstack(np.meshgrid(np.linspace(-3,3,self.n_case+1),np.linspace(-3,3,self.n_case+1)))
-		self.Pgoal = np.zeros((self.n_case+1, self.n_case+1))
-		self.Ppos = np.zeros((self.n_case+1, self.n_case+1))
-		self.xy = self.grid.reshape(31*31,2)
+		self.grid = np.dstack(np.meshgrid(np.linspace(-3,3-self.grain,self.n_case),np.linspace(-3,3-self.grain,self.n_case)))
+		self.Pgoal = np.zeros((self.n_case, self.n_case))
+		self.Ppos = np.zeros((self.n_case, self.n_case))
+		self.xy = self.grid.reshape(self.n_case*self.n_case,2)
 		# Mask init
-		self.mask = {'Y':{p:{i:np.zeros((31,31,31*31)) for i in [1,2,3]} for p in ['I','II','V']}}
-		self.mask['I'] = {p:{i:np.zeros((31,31,31*31)) for i in [1,2]} for p in ['1b','10','2','3b','4','9b','8']}
+		self.mask = {'Y':{p:{i:np.zeros((self.n_case,self.n_case,self.n_case*self.n_case)) for i in [1,2,3]} for p in ['I','II','V']}}
+		self.mask['I'] = {p:{i:np.zeros((self.n_case,self.n_case,self.n_case*self.n_case)) for i in [1,2]} for p in ['1b','10','2','3b','4','9b','8']}
 		self.next_states = {'V':['4','2','3b'],
 							'I':['2','10','1b'],
 							'II':['8','9b','10'],
@@ -385,10 +386,11 @@ class PI():
 		self.ind = np.arange(self.n_action)
 		self.reward_position = self.positions['III']		
 		self.reward_found = False
+		self.debug = []
 
 	def fillMaskArray(self):
 		p1 = '1b'
-		for i in xrange(31*31):
+		for i in xrange(self.n_case*self.n_case):
 			p = self.xy[i]
 			# cadran 1 upper
 			self.mask['I'][p1][1][:,:,i][self.grid[:,:,1]>p[1]] = 1.0
@@ -399,7 +401,7 @@ class PI():
 			direction = self.computeAngle(p1, self.next_states[p1][0])
 			arc = (direction+(np.pi/2.))%(2*np.pi)
 			coeff = np.sin(arc)/np.cos(arc)
-			for i in xrange(31*31):
+			for i in xrange(self.n_case*self.n_case):
 				p = self.xy[i]
 				self.mask['I'][p1][1][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))>0] = 1.0
 				self.mask['I'][p1][2][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))<0] = 1.0
@@ -413,7 +415,7 @@ class PI():
 		arc = np.sort(arc)
 		# coefficient directeur de la droite
 		coeff = np.array([np.sin(arc[i])/np.cos(arc[i]) for i in xrange(3)])
-		for i in xrange(31*31):
+		for i in xrange(self.n_case*self.n_case):
 			p = self.xy[i]	
 			# cadran 1 right
 			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0)] = 1.0
@@ -433,7 +435,7 @@ class PI():
 		# coefficient directeur de la droite
 		coeff = np.array([np.sin(arc[i])/np.cos(arc[i]) for i in xrange(3)])
 		# careful ceoff[0] est une droite vertical
-		for i in xrange(31*31):
+		for i in xrange(self.n_case*self.n_case):
 			p = self.xy[i]	
 			# cadran 1 right
 			self.mask['Y'][p1][1][:,:,i][(self.grid[:,:,0]>p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0))] = 1.0
@@ -452,7 +454,7 @@ class PI():
 		arc = np.sort(arc)
 		# coefficient directeur de la droite
 		coeff = np.array([np.sin(arc[i])/np.cos(arc[i]) for i in xrange(3)])		
-		for i in xrange(31*31):
+		for i in xrange(self.n_case*self.n_case):
 			p = self.xy[i]	
 			# cadran 1 lower right
 			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 1.0
@@ -528,12 +530,12 @@ class PI():
 	def fill_PGoal(self):
 		for y in xrange(self.n_case):
 			for x in xrange(self.n_case):
-				self.Pgoal[y,x] = self.cdf_multi(self.grid[y,x],self.grid[y+1,x+1], self.reward_position, self.varGoal)
+				self.Pgoal[y,x] = self.cdf_multi(self.grid[y,x],self.grid[y,x]+self.grain, self.reward_position, self.varGoal)
 
 	def fill_PPos(self):
 		for y in xrange(self.n_case):
 			for x in xrange(self.n_case):
-				self.Ppos[y,x] = self.cdf_multi(self.grid[y,x],self.grid[y+1,x+1], self.positions[self.current_position], self.varPos)
+				self.Ppos[y,x] = self.cdf_multi(self.grid[y,x],self.grid[y,x]+self.grain, self.positions[self.current_position], self.varPos)
 
 	def computeValue(self, position, state, a, possible):
 		# Very tricky : state in [U,Y,I] and a in [0,1,2,3]
@@ -543,11 +545,10 @@ class PI():
 		ind = self.ind[possible==1]
 		self.q_values = np.ones(len(ind))
 		if self.reward_found and len(ind) > 1:
-			for i in xrange(len(ind)):				
+			for i in xrange(len(ind)):
 				k = self.transition[(self.previous_position, self.current_position,ind[i])]
 				tmp = np.sum(np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal),1), 0)				
-				self.q_values[i] = np.sum(tmp * self.Ppos.flatten())
-				# self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))				
+				self.q_values[i] = np.sum(tmp * self.Ppos.flatten())				
 		p_a = np.zeros(self.n_action)		
 		p_a[ind] = self.softMax(self.q_values)
 		return p_a[self.current_action]
