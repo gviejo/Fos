@@ -39,7 +39,7 @@ void softmax(double *p, double *v, double beta, int n) {
 	int have_inf=0;
 	for (int i=0;i<n;i++) {
 		tmp[i] = exp(v[i]*beta);
-		if isinf(tmp[i]) {
+		if (isinf(tmp[i])) {
 			have_inf = 1;
 			tmp[i]=1.0-double(n)*1e-8;
 		}
@@ -265,8 +265,8 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	///////////////////
 	// parameters
 	double beta=0.0+beta_*(200.0-0.0);
-	double gamma=0.0+gamma_*(1.0-0.0);	
-	double eta=0.0+(1.0-0.0)*eta_;		
+	double gamma=0.0+gamma_*(0.999999999-0.0);	
+	double eta=0.1+(0.1-0.01)*eta_;		
 	// std::cout << beta << " " << gamma << " " << eta << std::endl;
 	int n_state = 3;
 	int n_action = 4;
@@ -294,7 +294,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	std::string fileinfo = _data_dir;
 	std::string filedata = _data_dir;
 	fileinfo.append("info.txt");
-	filedata.append("possarpossible.txt");
+	filedata.append("possarpossible.txt");	
 	std::ifstream data_fileinfo(fileinfo.c_str());
 	string line;
 	if (data_fileinfo.is_open()) {
@@ -350,7 +350,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 		// START TRIALS
 		varPos = gamma;
 		previous_pos = 1;
-		// double this_log = 0.0;
+		double this_log = 0.0;
 		for (int st=0;st<size_trials[tr]-1;st++) {		
 			nb_possible = 0;
 			int t = 0;		
@@ -409,7 +409,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 				for (int i=0;i<nb_possible;i++) {
 					if (ind_action[i] == action) {
 						logLikelihood += log(p_a[i]);
-						// this_log += log(p_a[i]);
+						this_log += log(p_a[i]);
 					}
 				}
 			}									
@@ -446,7 +446,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	fit[0] = logLikelihood;	
 
 	if (isnan(fit[0]) || isinf(fit[0]) || fit[0] == 0) {
-		fit[0]=-100000.0;		
-		return;
-	}
+	 	fit[0]=-100000.0;		
+	 	return;
+	 }
 }
