@@ -89,7 +89,9 @@ double compute_Ppos(double x, double y, int pos, double varPos, double grain) {
 	double value;
 	int inform;
 	// mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);	
-	value = (pow(upper[1]-lower[1],2)+pow(upper[0]-lower[0],2))/(pow(lower[0],2)+pow(lower[1],2));
+	// value = (pow(upper[1]-lower[1],2)+pow(upper[0]-lower[0],2))/(pow(lower[0],2)+pow(lower[1],2));
+	value = sqrt(pow(meanxy[1]-y,2)+pow(meanxy[0]-x,2));
+	value /= varPos;
 	return value;	
 }
 double compute_PGoal(double x, double y, double varGoal, double grain) {
@@ -101,7 +103,9 @@ double compute_PGoal(double x, double y, double varGoal, double grain) {
 	double value;
 	int inform;
 	// mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);
-	value = (pow(upper[1]-lower[1],2)+pow(upper[0]-lower[0],2))/(pow(lower[0],2)+pow(lower[1],2));
+	// value = (pow(upper[1]-lower[1],2)+pow(upper[0]-lower[0],2))/(pow(lower[0],2)+pow(lower[1],2));
+	value = sqrt(pow(meanxy[1]-y,2)+pow(meanxy[0]-x,2));
+	value /= varPos;
 	return value;	
 }
 int in_Yaction(double xp, double yp, double xt, double yt, int p) {
