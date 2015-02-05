@@ -6,31 +6,13 @@
 #include <math.h>
 
 using namespace std;
-const int n_case = 30;
-const int n_case2 = 900;
-double grain = 6.0/double(n_case);
-int dim = 2;	
-int infin [2] = {2,2};
-double correl = 0.0;
-int maxpts = 5000;
-double abseps = 0.00005;
-double releps = 0;
-double coeff14 = -0.5096;
-double coeff31 = 0.5096;
-double coeff912 = 1.0;
-double coeff124 = -0.3267;
-double coeff49 = -6.2527;
-double coeff116 = -1.0;
-double coeff63 = 6.2527;
-double coeff311 = 0.3267;
-double coeff [7] = {0.0, 1.3768, -1.3768, -3.1111, 3.1111, -0.3273, 0.3273};
-int ind_pgi [13] = {0,0,0,1,2,0,3,0,0,4,0,5,6};
-int ind_pos2 [7] = {1,3,4,6,9,11,12};
 
-// extern "C" {
-// 	int mvndst_(int *, double (*)[2], double (*)[2], int (*)[2], double *, int *,
-//                 double *, double *, double *, double *, int *);
-// }
+
+
+extern "C" {
+	int mvndst_(int *, double (*)[2], double (*)[2], int (*)[2], double *, int *,
+                double *, double *, double *, double *, int *);
+}
 void softmax(double *p, double *v, double beta, int n) {
 	double sum = 0.0;
 	double tmp[n];
@@ -79,7 +61,13 @@ void get_exactPosition(double *xy, int pos) {
 	// else if (pos==13) {xy[0]=-0.235;xy[1]=1.193;}
 	// else if (pos==14) {xy[0]=0.235;xy[1]=1.193;}						 
 }
-double compute_Ppos(double x, double y, int pos, double varPos, double grain) {
+double compute_Ppos(double x, double y, int pos, double varPos, double grain) {	
+	int dim = 2;	
+	int infin [2] = {2,2};
+	double correl = 0.0;
+	int maxpts = 5000;
+	double abseps = 0.00005;
+	double releps = 0;
 	double meanxy [2];
 	double stdev = sqrt(varPos);
 	get_exactPosition(meanxy, pos);	
@@ -88,13 +76,20 @@ double compute_Ppos(double x, double y, int pos, double varPos, double grain) {
 	double error;
 	double value;
 	int inform;
-	// mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);	
+	mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);	
 	// value = (pow(upper[1]-lower[1],2)+pow(upper[0]-lower[0],2))/(pow(lower[0],2)+pow(lower[1],2));
-	value = sqrt(pow(meanxy[1]-y,2)+pow(meanxy[0]-x,2));
-	value /= varPos;
+	// value = sqrt(pow(meanxy[1]-y,2)+pow(meanxy[0]-x,2));
+	// value = (1.0/(2*M_PI)) * exp((-(pow(lower[0],2)+pow(lower[1],2))/2.0));
+	// value = 0.1;
 	return value;	
 }
 double compute_PGoal(double x, double y, double varGoal, double grain) {
+	int dim = 2;	
+	int infin [2] = {2,2};
+	double correl = 0.0;
+	int maxpts = 5000;
+	double abseps = 0.00005;
+	double releps = 0;
 	double meanxy [2] = {-0.235,1.193};
 	double stdev = sqrt(varGoal);	
 	double lower [2] = {(x-meanxy[0])/stdev, (y-meanxy[1])/stdev};
@@ -102,13 +97,22 @@ double compute_PGoal(double x, double y, double varGoal, double grain) {
 	double error;
 	double value;
 	int inform;
-	// mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);
+	mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);
 	// value = (pow(upper[1]-lower[1],2)+pow(upper[0]-lower[0],2))/(pow(lower[0],2)+pow(lower[1],2));
-	value = sqrt(pow(meanxy[1]-y,2)+pow(meanxy[0]-x,2));
-	value /= varPos;
+	// value = (1.0/(2*M_PI)) * exp((-(pow(lower[0],2)+pow(lower[1],2))/2.0));
+	// value = sqrt(pow(meanxy[1]-y,2)+pow(meanxy[0]-x,2));
+	// value = 0.1;
 	return value;	
 }
 int in_Yaction(double xp, double yp, double xt, double yt, int p) {
+	double coeff14 = -0.5096;
+	double coeff31 = 0.5096;
+	double coeff912 = 1.0;
+	double coeff124 = -0.3267;
+	double coeff49 = -6.2527;
+	double coeff116 = -1.0;
+	double coeff63 = 6.2527;
+	double coeff311 = 0.3267;
 	if (p==2) {
 		double d14 = yt-(xt*coeff14+(yp-coeff14*xp));
 		double d31 = yt-(xt*coeff31+(yp-coeff31*xp));
@@ -156,13 +160,13 @@ int in_Yaction(double xp, double yp, double xt, double yt, int p) {
 	}	
 	return -1;
 }
-int in_Iaction(double xp, double yp, double xt, double yt, int p) {
+int in_Iaction(double xp, double yp, double xt, double yt, int p, double *coeff, int *ind_pgi) {
 	double d = yt-(xt*coeff[ind_pgi[p]]+(yp-coeff[ind_pgi[p]]*xp));
 	if (d>=0.0) return 0;
 	else return 1;	
 }
-void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*PG2) [3], double (*PGI) [2][7], double varGoal, double (*grid) [2]) {
-	for (int i=0;i<n_case2;i++) {
+void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*PG2) [3], double (*PGI) [2][7], double varGoal, double (*grid) [2], double *coeff, int *ind_pgi) {
+	for (int i=0;i<900;i++) {
 		for (int j=0;j<3;j++) {
 			PG8[i][j] = 0.0;
 			PG7[i][j] = 0.0;
@@ -174,9 +178,11 @@ void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*P
 		}
 	}
 	int ind_cadran;
-	for (int i=0;i<n_case2;i++) {
+	double grain = 6.0/30.0;
+	int ind_pos2 [7] = {1,3,4,6,9,11,12};	
+	for (int i=0;i<900;i++) {
 		pgoal[i] = compute_PGoal(grid[i][0], grid[i][1], varGoal, grain);
-		for (int j=0;j<n_case2;j++) {
+		for (int j=0;j<900;j++) {
 			ind_cadran = in_Yaction(grid[j][0], grid[j][1], grid[i][0], grid[i][1], 8);
 			if (ind_cadran!=-1) PG8[j][ind_cadran] += pgoal[i];
 			ind_cadran = in_Yaction(grid[j][0], grid[j][1], grid[i][0], grid[i][1], 7);
@@ -185,7 +191,7 @@ void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*P
 			if (ind_cadran!=-1) PG2[j][ind_cadran] += pgoal[i];
 
 			for (int k=0;k<7;k++) {				
-				ind_cadran = in_Iaction(grid[j][0], grid[j][1], grid[i][0], grid[i][1], ind_pos2[k]);
+				ind_cadran = in_Iaction(grid[j][0], grid[j][1], grid[i][0], grid[i][1], ind_pos2[k], coeff, ind_pgi);
 				PGI[j][ind_cadran][k] += pgoal[i];
 			}
 		}
@@ -267,19 +273,21 @@ void get_Iorder_action(int *order, int p, int pp) {
 		return;}
 }
 void compute_3qv(double *q_values, int pos, int previous_pos, double (*PG) [3], double varPos, double (*grid)[2]) {
+	double grain = 6.0/30.0;
 	int order [3];
 	get_Yorder_action(order, pos, previous_pos);	
-	for (int j=0;j<n_case2;j++) {
+	for (int j=0;j<900;j++) {
 		for (int i=0;i<3;i++) {	
 			q_values[order[i]] += (PG[j][i]*compute_Ppos(grid[j][0], grid[j][1], pos, varPos, grain));
 		}
 	}
 }
-void compute_2qv(double *q_values, int pos, int previous_pos, double (*PG) [2][7], double varPos, double (*grid)[2]) {	
+void compute_2qv(double *q_values, int pos, int previous_pos, double (*PG) [2][7], double varPos, double (*grid)[2], int *ind_pgi) {	
+	double grain = 6.0/30.0;
 	int order [2];	
 	int ind_pos = ind_pgi[pos];
 	get_Iorder_action(order, pos, previous_pos);				
-	for (int j=0;j<n_case2;j++) {
+	for (int j=0;j<900;j++) {
 		for (int i=0;i<2;i++) {			
 			q_values[order[i]] += (PG[j][i][ind_pos]*compute_Ppos(grid[j][0], grid[j][1], pos, varPos, grain));
 		}
@@ -296,6 +304,8 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	std::cout << beta << " " << gamma << " " << eta << std::endl;
 	const int n_state = 3;
 	const int n_action = 4;
+	const int n_case = 30;
+	const int n_case2 = 900;
 	int size_trials [N];
 	int nb_points = 0;
 	double varPos = gamma;
@@ -318,6 +328,9 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	double PGI[n_case2][2][7];
 	double q_values[4];	
 	double p_a[3];	
+	double coeff [7] = {0.0, 1.3768, -1.3768, -3.1111, 3.1111, -0.3273, 0.3273};
+	int ind_pgi [13] = {0,0,0,1,2,0,3,0,0,4,0,5,6};
+	int ind_pos2 [7] = {1,3,4,6,9,11,12};	
 	///////////////////
 	const char* _data_dir = data_dir;	
 	// LOADING INFO.txt
@@ -380,7 +393,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 		// START TRIALS
 		varPos = gamma;
 		previous_pos = 0;
-		// double this_log = 0.0;
+		double this_log = 0.0;
 		for (int st=0;st<size_trials[tr]-1;st++) {				
 			pos = sarp[index][0];
 			state = sarp[index][1];
@@ -398,7 +411,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 			}						
 			// COMPUTE VALUE
 			if (nb_possible==2) {
-				compute_2qv(q_values, pos, previous_pos, PGI, varPos, grid);
+				compute_2qv(q_values, pos, previous_pos, PGI, varPos, grid, ind_pgi);
 				softmax(p_a, q_values, beta, nb_possible);			
 				// ADDING LOGLIKELIHOOD 
 				for (int i=0;i<nb_possible;i++) {					
@@ -428,7 +441,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 			if (reward==1) {				
 				varGoal = (1.0-eta)*varGoal + eta * varPos;				
 				// FILL PGOAL and PG*				
-				update_goal(p_goal, PG8, PG7, PG2, PGI, varGoal, grid);
+				update_goal(p_goal, PG8, PG7, PG2, PGI, varGoal, grid, coeff, ind_pgi);
 			}
 			index+=1;			
 		}
@@ -437,7 +450,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 			varPos = 7.0*gamma;
 			varGoal = (1.0-eta)*varGoal + eta * varPos;			
 			// FILL PGOAL and PG*
-			update_goal(p_goal, PG8, PG7, PG2, PGI, varGoal, grid);
+			update_goal(p_goal, PG8, PG7, PG2, PGI, varGoal, grid, coeff, ind_pgi);
 		}
 		index+=1;
 		// std::cout << tr << " " << this_log << std::endl;
