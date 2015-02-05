@@ -71,7 +71,7 @@ class TYMaze():
 		self.model.startExp()
 		self.world.startingPos()
 		for i in xrange(nb_trial):
-		# for i in xrange(3):
+		# for i in xrange(1):
 			self.model.startTrial()
 			tmp = 0.0
 			for j in xrange(len(data[i]['action'])):								
@@ -79,14 +79,14 @@ class TYMaze():
 				# if i==23:
 				# 	if np.sum(data[i]['possible'][j])>1:											
 				# 		print self.model.q_values				
-				# if i==2:				
+				# if i == 3 and np.sum(data[i]['possible'][j])>1:
 				# 	print i,j									
 				# 	a = self.model.mask['I']['1b'][1]*np.atleast_3d(self.model.Pgoal)
 				# 	# for k in xrange(100):
 				# 	# 	# print k, np.sum(a[:,:,k])
 				# 	# 	print k, self.model.Ppos.flatten()[k]					
-				# 	if np.sum(data[i]['possible'][j])>1:
-				# 		print self.model.q_values
+				# 	if 
+					# print self.model.q_values
 
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
 				loglike[data[i]['ind'][j]] = np.log(pa)
@@ -95,6 +95,10 @@ class TYMaze():
 				self.guidage()
 			
 			# print i, tmp
+			print tmp
+		# for i in xrange(900):
+		# 	print self.model.xy[i], self.model.Pgoal.flatten()[i]
+
 
 		llh = np.sum(loglike)
 		if llh==0 or np.isnan(llh) or np.isinf(llh):

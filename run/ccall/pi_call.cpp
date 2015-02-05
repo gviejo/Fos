@@ -4,14 +4,34 @@
 #include <sstream>
 #include <iterator>
 #include <math.h>
-
+#include "normal.cpp"
 using namespace std;
 
 
+// extern "C" {
+// 		int mvndst_(int *, double (*)[2], double (*)[2], int (*)[2], double *, int *,
+//                 double *, double *, double *, double *, int *);
+// }
+// double compute_prefillPGoal(double x, double y, double varGoal, double grain) {	
+// 	double stdev = sqrt(varGoal);	
+// 	double lower [2] = {(x-(-0.235))/stdev, (y-1.193)/stdev};
+// 	// double upper [2] = {(x+grain-(-0.235))/stdev, (y+grain-1.193)/stdev};
+// 	return ND2(lower[0], lower[1], 0.0);
+// }
+// double compute_prefillPpos(double x, double y, double varGoal, double grain) {
+// 	double meanxy [2];
+// 	get_exactPosition(meanxy, pos);			
+// 	double lower [2] = {(x-(-0.235))/sqrt(varGoal), (y-1.193)/sqrt(varGoal)};
+// 	// double upper [2] = {(x+grain-(-0.235))/sqrt(varGoal), (y+grain-1.193)/sqrt(varGoal)};
+// 	return ND2(lower[0], lower[1], 0.0);	
+// }	
+double cdf_multi(double *lower, double *upper, double *mu, double cov) {
+	for (int i=0;i<2;i++) {
+		lower[i] = (lower[i]-mu[i])/sqrt(cov);
+		upper[i] = (upper[i]-mu[i])/sqrt(cov);
+	}
+	return ND2(lower[0], lower[1], 0.0)+ND2(upper[1], upper[1], 0.0)-ND2(upper[0], lower[1], 0.0)-ND2(lower[0], upper[1], 0.0);
 
-extern "C" {
-	int mvndst_(int *, double (*)[2], double (*)[2], int (*)[2], double *, int *,
-                double *, double *, double *, double *, int *);
 }
 void softmax(double *p, double *v, double beta, int n) {
 	double sum = 0.0;
@@ -62,47 +82,18 @@ void get_exactPosition(double *xy, int pos) {
 	// else if (pos==14) {xy[0]=0.235;xy[1]=1.193;}						 
 }
 double compute_Ppos(double x, double y, int pos, double varPos, double grain) {	
-	int dim = 2;	
-	int infin [2] = {2,2};
-	double correl = 0.0;
-	int maxpts = 5000;
-	double abseps = 0.00005;
-	double releps = 0;
 	double meanxy [2];
-	double stdev = sqrt(varPos);
-	get_exactPosition(meanxy, pos);	
+	get_exactPosition(meanxy, pos);
+	double stdev = sqrt(varPos);			
 	double lower [2] = {(x-meanxy[0])/stdev, (y-meanxy[1])/stdev};
 	double upper [2] = {(x+grain-meanxy[0])/stdev, (y+grain-meanxy[1])/stdev};
-	double error;
-	double value;
-	int inform;
-	mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);	
-	// value = (pow(upper[1]-lower[1],2)+pow(upper[0]-lower[0],2))/(pow(lower[0],2)+pow(lower[1],2));
-	// value = sqrt(pow(meanxy[1]-y,2)+pow(meanxy[0]-x,2));
-	// value = (1.0/(2*M_PI)) * exp((-(pow(lower[0],2)+pow(lower[1],2))/2.0));
-	// value = 0.1;
-	return value;	
+	return ND2(upper[0], upper[1], 0.0)+ND2(lower[0],lower[1],0.0)-ND2(upper[0],lower[1],0.0)-ND2(lower[0], upper[1],0.0);
 }
 double compute_PGoal(double x, double y, double varGoal, double grain) {
-	int dim = 2;	
-	int infin [2] = {2,2};
-	double correl = 0.0;
-	int maxpts = 5000;
-	double abseps = 0.00005;
-	double releps = 0;
-	double meanxy [2] = {-0.235,1.193};
-	double stdev = sqrt(varGoal);	
-	double lower [2] = {(x-meanxy[0])/stdev, (y-meanxy[1])/stdev};
-	double upper [2] = {(x+grain-meanxy[0])/stdev, (y+grain-meanxy[1])/stdev};
-	double error;
-	double value;
-	int inform;
-	mvndst_(&dim, &lower, &upper, &infin, &correl, &maxpts, &abseps, &releps, &error, &value, &inform);
-	// value = (pow(upper[1]-lower[1],2)+pow(upper[0]-lower[0],2))/(pow(lower[0],2)+pow(lower[1],2));
-	// value = (1.0/(2*M_PI)) * exp((-(pow(lower[0],2)+pow(lower[1],2))/2.0));
-	// value = sqrt(pow(meanxy[1]-y,2)+pow(meanxy[0]-x,2));
-	// value = 0.1;
-	return value;	
+	double stdev = sqrt(varGoal);
+	double lower [2] = {(x-(-0.235))/stdev, (y-1.193)/stdev};
+	double upper [2] = {(x+grain-(-0.235))/stdev, (y+grain-1.193)/stdev};
+	return ND2(upper[0], upper[1], 0.0)+ND2(lower[0],lower[1],0.0)-ND2(upper[0],lower[1],0.0)-ND2(lower[0], upper[1],0.0);
 }
 int in_Yaction(double xp, double yp, double xt, double yt, int p) {
 	double coeff14 = -0.5096;
@@ -165,7 +156,9 @@ int in_Iaction(double xp, double yp, double xt, double yt, int p, double *coeff,
 	if (d>=0.0) return 0;
 	else return 1;	
 }
-void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*PG2) [3], double (*PGI) [2][7], double varGoal, double (*grid) [2], double *coeff, int *ind_pgi) {
+void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*PG2) [3], double (*PGI) [2][7], double varGoal, double (*grid) [2], double *coeff, int *ind_pgi) {	
+	double grain = 6.0/30.0;
+	// double tmp [31][31];
 	for (int i=0;i<900;i++) {
 		for (int j=0;j<3;j++) {
 			PG8[i][j] = 0.0;
@@ -176,11 +169,11 @@ void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*P
 			PGI[i][0][j] = 0.0;
 			PGI[i][1][j] = 0.0;
 		}
+		// prefill_pgoal[i] = compute_prefillPGoal(grid[i][0], grid[i][1], varGoal, grain);
 	}
 	int ind_cadran;
-	double grain = 6.0/30.0;
 	int ind_pos2 [7] = {1,3,4,6,9,11,12};	
-	for (int i=0;i<900;i++) {
+	for (int i=0;i<900;i++) {		
 		pgoal[i] = compute_PGoal(grid[i][0], grid[i][1], varGoal, grain);
 		for (int j=0;j<900;j++) {
 			ind_cadran = in_Yaction(grid[j][0], grid[j][1], grid[i][0], grid[i][1], 8);
@@ -301,7 +294,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	double gamma=0.0+gamma_*(0.999999999-0.0);	
 	double eta=0.1+(0.1-0.01)*eta_;
 
-	std::cout << beta << " " << gamma << " " << eta << std::endl;
+	// std::cout << beta << " " << gamma << " " << eta << std::endl;
 	const int n_state = 3;
 	const int n_action = 4;
 	const int n_case = 30;
@@ -331,6 +324,8 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	double coeff [7] = {0.0, 1.3768, -1.3768, -3.1111, 3.1111, -0.3273, 0.3273};
 	int ind_pgi [13] = {0,0,0,1,2,0,3,0,0,4,0,5,6};
 	int ind_pos2 [7] = {1,3,4,6,9,11,12};	
+	// double prefill_pgoal[n_case2];
+	// double prefill_ppos[n_case2];
 	///////////////////
 	const char* _data_dir = data_dir;	
 	// LOADING INFO.txt
@@ -389,11 +384,11 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 
 	int index = 0;
 	for (int tr=0;tr<N;tr++) {
-	// for (int tr=0;tr<3;tr++) {
+	// for (int tr=0;tr<1;tr++) {
 		// START TRIALS
 		varPos = gamma;
 		previous_pos = 0;
-		double this_log = 0.0;
+		// double this_log = 0.0;
 		for (int st=0;st<size_trials[tr]-1;st++) {				
 			pos = sarp[index][0];
 			state = sarp[index][1];
@@ -419,7 +414,10 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 						logLikelihood += log(p_a[i]);
 						// this_log += log(p_a[i]);
 					}
-				}				
+				}	
+				// if (tr == 3) {
+				// 	std::cout << q_values[0] << " " << q_values[1] << " " << std::endl;			
+				// }			
 			}
 			else if (nb_possible == 3) {				
 				if (pos==8) compute_3qv(q_values, 8, previous_pos, PG8, varPos, grid);
@@ -433,6 +431,10 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 						// this_log += log(p_a[i]);
 					}
 				}
+				// if (tr == 3) {
+				// 	for (int i=0;i<3;i++) { std::cout << q_values[i] << " " ;}
+				// 	std::cout << std::endl;
+				// }
 			}
 				
 			// UPDATE VALUE
@@ -454,6 +456,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 		}
 		index+=1;
 		// std::cout << tr << " " << this_log << std::endl;
+		// std::cout << this_log << std::endl;
 
 	}	
 
