@@ -282,7 +282,7 @@ class PI():
 		self.n_state = len(states)		
 		self.bounds = dict({"gamma":[0.0, 0.9999999999],
 							"beta":[0.0, 200.0],
-							"eta":[0.0, 0.99999999999]})		
+							"eta":[0.01, 0.1]})		
 		# Values initialization
 		self.transition = {('1a','1b',0):1,
 							('1a','1b',2):2,
@@ -358,7 +358,7 @@ class PI():
 
 		self.varGoal = 0.0				
 		# Matrix init
-		self.n_case = 10
+		self.n_case = 30
 		self.grain = 6./self.n_case	
 		self.grid = np.dstack(np.meshgrid(np.linspace(-3,3-self.grain,self.n_case),np.linspace(-3,3-self.grain,self.n_case)))
 		self.Pgoal = np.zeros((self.n_case, self.n_case))
@@ -393,7 +393,7 @@ class PI():
 		for i in xrange(self.n_case*self.n_case):
 			p = self.xy[i]
 			# cadran 1 upper
-			self.mask['I'][p1][1][:,:,i][self.grid[:,:,1]>p[1]] = 1.0
+			self.mask['I'][p1][1][:,:,i][self.grid[:,:,1]>=p[1]] = 1.0
 			# cadran 2 upper 
 			self.mask['I'][p1][2][:,:,i][self.grid[:,:,1]<p[1]] = 1.0
 
@@ -403,7 +403,7 @@ class PI():
 			coeff = np.sin(arc)/np.cos(arc)
 			for i in xrange(self.n_case*self.n_case):
 				p = self.xy[i]
-				self.mask['I'][p1][1][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))>0] = 1.0
+				self.mask['I'][p1][1][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))>=0] = 1.0
 				self.mask['I'][p1][2][:,:,i][(self.grid[:,:,1]-(self.grid[:,:,0]*coeff+(p[1]-coeff*p[0])))<0] = 1.0
 
 		p1 = 'V'
@@ -418,9 +418,9 @@ class PI():
 		for i in xrange(self.n_case*self.n_case):
 			p = self.xy[i]	
 			# cadran 1 right
-			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0)] = 1.0
+			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>=0)] = 1.0
 			# cadran 2 upper
-			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>0)] = 1.0
+			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>=0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>=0)] = 1.0
 			# cadran 3 lower right
 			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 1.0
 
@@ -438,9 +438,9 @@ class PI():
 		for i in xrange(self.n_case*self.n_case):
 			p = self.xy[i]	
 			# cadran 1 right
-			self.mask['Y'][p1][1][:,:,i][(self.grid[:,:,0]>p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0))] = 1.0
+			self.mask['Y'][p1][1][:,:,i][(self.grid[:,:,0]>p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>=0))] = 1.0
 			# cadran 2 left
-			self.mask['Y'][p1][2][:,:,i][(self.grid[:,:,0]<p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0))] = 1.0
+			self.mask['Y'][p1][2][:,:,i][(self.grid[:,:,0]<p[0]) * (((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>=0))] = 1.0
 			# cadran 3 lower
 			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 1.0
 
@@ -459,9 +459,9 @@ class PI():
 			# cadran 1 lower right
 			self.mask['Y'][p1][1][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))<0)] = 1.0
 			# cadran 2 upper
-			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>0)] = 1.0
+			self.mask['Y'][p1][2][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[2]+(p[1]-coeff[2]*p[0])))>=0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))>=0)] = 1.0
 			# cadran 3 left
-			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>0)] = 1.0
+			self.mask['Y'][p1][3][:,:,i][((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[0]+(p[1]-coeff[0]*p[0])))<0) * ((self.grid[:,:,1]-(self.grid[:,:,0]*coeff[1]+(p[1]-coeff[1]*p[0])))>=0)] = 1.0
 
 	def setParameters(self, name, value):            
 		if value < self.bounds[name][0]:
