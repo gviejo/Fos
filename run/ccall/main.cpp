@@ -13,7 +13,7 @@ using namespace std;
 int main () {		
 	int N = 52;		
 	double fit [1] = {0.0};	
-  	sferes_call(fit, N, "data_txt/B137_52/", 0.5, 0.1, 0.1);  	
+  	sferes_call(fit, N, "data_txt/B163_52/", 0.0663181, 0.183356, 0.425264);  	
   	std::cout << fit[0] << std::endl;
 
 

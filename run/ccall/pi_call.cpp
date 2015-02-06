@@ -12,17 +12,17 @@ using namespace std;
 // 		int mvndst_(int *, double (*)[2], double (*)[2], int (*)[2], double *, int *,
 //                 double *, double *, double *, double *, int *);
 // }
-// double compute_prefillPGoal(double x, double y, double varGoal, double grain) {	
+// double compute_prefillPGoal(double x, double y, double varGoal, double grain_) {	
 // 	double stdev = sqrt(varGoal);	
 // 	double lower [2] = {(x-(-0.235))/stdev, (y-1.193)/stdev};
-// 	// double upper [2] = {(x+grain-(-0.235))/stdev, (y+grain-1.193)/stdev};
+// 	// double upper [2] = {(x+grain_-(-0.235))/stdev, (y+grain_-1.193)/stdev};
 // 	return ND2(lower[0], lower[1], 0.0);
 // }
-// double compute_prefillPpos(double x, double y, double varGoal, double grain) {
+// double compute_prefillPpos(double x, double y, double varGoal, double grain_) {
 // 	double meanxy [2];
 // 	get_exactPosition(meanxy, pos);			
 // 	double lower [2] = {(x-(-0.235))/sqrt(varGoal), (y-1.193)/sqrt(varGoal)};
-// 	// double upper [2] = {(x+grain-(-0.235))/sqrt(varGoal), (y+grain-1.193)/sqrt(varGoal)};
+// 	// double upper [2] = {(x+grain_-(-0.235))/sqrt(varGoal), (y+grain_-1.193)/sqrt(varGoal)};
 // 	return ND2(lower[0], lower[1], 0.0);	
 // }	
 double cdf_multi(double *lower, double *upper, double *mu, double cov) {
@@ -81,18 +81,18 @@ void get_exactPosition(double *xy, int pos) {
 	// else if (pos==13) {xy[0]=-0.235;xy[1]=1.193;}
 	// else if (pos==14) {xy[0]=0.235;xy[1]=1.193;}						 
 }
-double compute_Ppos(double x, double y, int pos, double varPos, double grain) {	
+double compute_Ppos(double x, double y, int pos, double varPos, double grain_) {	
 	double meanxy [2];
 	get_exactPosition(meanxy, pos);
 	double stdev = sqrt(varPos);			
 	double lower [2] = {(x-meanxy[0])/stdev, (y-meanxy[1])/stdev};
-	double upper [2] = {(x+grain-meanxy[0])/stdev, (y+grain-meanxy[1])/stdev};
+	double upper [2] = {(x+grain_-meanxy[0])/stdev, (y+grain_-meanxy[1])/stdev};
 	return ND2(upper[0], upper[1], 0.0)+ND2(lower[0],lower[1],0.0)-ND2(upper[0],lower[1],0.0)-ND2(lower[0], upper[1],0.0);
 }
-double compute_PGoal(double x, double y, double varGoal, double grain) {
+double compute_PGoal(double x, double y, double varGoal, double grain_) {
 	double stdev = sqrt(varGoal);
 	double lower [2] = {(x-(-0.235))/stdev, (y-1.193)/stdev};
-	double upper [2] = {(x+grain-(-0.235))/stdev, (y+grain-1.193)/stdev};
+	double upper [2] = {(x+grain_-(-0.235))/stdev, (y+grain_-1.193)/stdev};
 	return ND2(upper[0], upper[1], 0.0)+ND2(lower[0],lower[1],0.0)-ND2(upper[0],lower[1],0.0)-ND2(lower[0], upper[1],0.0);
 }
 int in_Yaction(double xp, double yp, double xt, double yt, int p) {
@@ -157,7 +157,7 @@ int in_Iaction(double xp, double yp, double xt, double yt, int p, double *coeff,
 	else return 1;	
 }
 void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*PG2) [3], double (*PGI) [2][7], double varGoal, double (*grid) [2], double *coeff, int *ind_pgi) {	
-	double grain = 6.0/30.0;
+	double grain_ = 6.0/30.0;
 	// double tmp [31][31];
 	for (int i=0;i<900;i++) {
 		for (int j=0;j<3;j++) {
@@ -169,12 +169,12 @@ void update_goal(double *pgoal, double (*PG8) [3], double (*PG7) [3], double (*P
 			PGI[i][0][j] = 0.0;
 			PGI[i][1][j] = 0.0;
 		}
-		// prefill_pgoal[i] = compute_prefillPGoal(grid[i][0], grid[i][1], varGoal, grain);
+		// prefill_pgoal[i] = compute_prefillPGoal(grid[i][0], grid[i][1], varGoal, grain_);
 	}
 	int ind_cadran;
 	int ind_pos2 [7] = {1,3,4,6,9,11,12};	
 	for (int i=0;i<900;i++) {		
-		pgoal[i] = compute_PGoal(grid[i][0], grid[i][1], varGoal, grain);
+		pgoal[i] = compute_PGoal(grid[i][0], grid[i][1], varGoal, grain_);
 		for (int j=0;j<900;j++) {
 			ind_cadran = in_Yaction(grid[j][0], grid[j][1], grid[i][0], grid[i][1], 8);
 			if (ind_cadran!=-1) PG8[j][ind_cadran] += pgoal[i];
@@ -266,23 +266,23 @@ void get_Iorder_action(int *order, int p, int pp) {
 		return;}
 }
 void compute_3qv(double *q_values, int pos, int previous_pos, double (*PG) [3], double varPos, double (*grid)[2]) {
-	double grain = 6.0/30.0;
+	double grain_ = 6.0/30.0;
 	int order [3];
 	get_Yorder_action(order, pos, previous_pos);	
 	for (int j=0;j<900;j++) {
 		for (int i=0;i<3;i++) {	
-			q_values[order[i]] += (PG[j][i]*compute_Ppos(grid[j][0], grid[j][1], pos, varPos, grain));
+			q_values[order[i]] += (PG[j][i]*compute_Ppos(grid[j][0], grid[j][1], pos, varPos, grain_));
 		}
 	}
 }
 void compute_2qv(double *q_values, int pos, int previous_pos, double (*PG) [2][7], double varPos, double (*grid)[2], int *ind_pgi) {	
-	double grain = 6.0/30.0;
+	double grain_ = 6.0/30.0;
 	int order [2];	
 	int ind_pos = ind_pgi[pos];
 	get_Iorder_action(order, pos, previous_pos);				
 	for (int j=0;j<900;j++) {
 		for (int i=0;i<2;i++) {			
-			q_values[order[i]] += (PG[j][i][ind_pos]*compute_Ppos(grid[j][0], grid[j][1], pos, varPos, grain));
+			q_values[order[i]] += (PG[j][i][ind_pos]*compute_Ppos(grid[j][0], grid[j][1], pos, varPos, grain_));
 		}
 	}
 }
