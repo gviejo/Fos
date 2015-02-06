@@ -382,7 +382,7 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	double gamma=0.0+gamma_*(0.999999999-0.0);	
 	double eta=0.1+(0.1-0.01)*eta_;
 
-	std::cout << beta << " " << gamma << " " << eta << std::endl;
+	// std::cout << beta << " " << gamma << " " << eta << std::endl;
 	const int n_state = 3;
 	const int n_action = 4;
 	const int n_case = 30;
@@ -468,10 +468,51 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 		ystart+=(6./double(n_case));
 	}
 
-	
-
+	// First trial  // NO COMPUTE VALUE
 	int index = 0;
-	for (int tr=0;tr<N;tr++) {
+	for (int st=0;st<size_trials[0]-1;st++) {				
+		pos = sarp[index][0];
+		state = sarp[index][1];
+		action = sarp[index][2];
+		reward = sarp[index][3];			
+		int t = 0;		
+		nb_possible = 0;
+		for (int j=4;j<8;j++) {
+			nb_possible+=sarp[index][j];
+			if (sarp[index][j]==1) {
+				ind_action[t] = j-4;					
+				t+=1;
+			}			
+			q_values[j-4] = 0.0;
+		}
+		softmax(p_a, q_values, beta, nb_possible);			
+		// ADDING LOGLIKELIHOOD 
+		for (int i=0;i<nb_possible;i++) {					
+			if (ind_action[i] == action) {
+				logLikelihood += log(p_a[i]);
+				// this_log += log(p_a[i]);
+			}
+		}		
+		// UPDATE VALUE
+		varPos+=gamma;
+		previous_pos = pos;			
+		if (reward==1) {				
+			varGoal = (1.0-eta)*varGoal + eta * varPos;				
+			// FILL PGOAL and PG*				
+			update_goal(p_goal, PG8, PG7, PG2, PGI, varGoal, grid, coeff, ind_pgi);
+		}
+		index+=1;			
+	}
+	//GUIDAGE
+	if (sarp[index-1][3] == 0) {			
+		varPos = 7.0*gamma;
+		varGoal = (1.0-eta)*varGoal + eta * varPos;			
+		// FILL PGOAL and PG*
+		update_goal(p_goal, PG8, PG7, PG2, PGI, varGoal, grid, coeff, ind_pgi);
+	}
+	index+=1;
+	// OTHERS TRIALS 
+	for (int tr=1;tr<N;tr++) {
 	// for (int tr=0;tr<1;tr++) {
 		// START TRIALS
 		varPos = gamma;
