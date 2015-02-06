@@ -4,123 +4,107 @@
 #include <sstream>
 #include <iterator>
 #include <math.h>
+#include "normal.cpp"
 
-// extern "C" {
-// 		int mvndst_(int *, double (*)[2], double (*)[2], int (*)[2], double *, int *,
-//                 double *, double *, double *, double *, int *);
+// double max(double a, double b) {
+// 	if (a>b)
+//         return a;
+// 	else
+//         return b;
 // }
-// double compute_prefillPGoal(double x, double y, double varGoal, double grain_) {	
-// 	double stdev = sqrt(varGoal);	
-// 	double lower [2] = {(x-(-0.235))/stdev, (y-1.193)/stdev};
-// 	// double upper [2] = {(x+grain_-(-0.235))/stdev, (y+grain_-1.193)/stdev};
-// 	return ND2(lower[0], lower[1], 0.0);
+// double min(double a, double b) {
+// 	if (a>b)
+//         return b;
+// 	else
+//         return a;
 // }
-// double compute_prefillPpos(double x, double y, double varGoal, double grain_) {
-// 	double meanxy [2];
-// 	get_exactPosition(meanxy, pos);			
-// 	double lower [2] = {(x-(-0.235))/sqrt(varGoal), (y-1.193)/sqrt(varGoal)};
-// 	// double upper [2] = {(x+grain_-(-0.235))/sqrt(varGoal), (y+grain_-1.193)/sqrt(varGoal)};
-// 	return ND2(lower[0], lower[1], 0.0);	
-// }	
-double max(double a, double b) {
-	if (a>b)
-        return a;
-	else
-        return b;
-}
-double min(double a, double b) {
-	if (a>b)
-        return b;
-	else
-        return a;
-}
-double sgn(double a) {
-	if (a>0)
-        return 1.;
-	else if (a<0)
-        return -1.;
-	else
-        return 0.;
-}
-double ndf(double t) {
-	return 0.398942280401433*exp(-t*t/2);
-}
-double nc(double x) {
-	double result;
-	if (x<-7.)
-        result = ndf(x)/sqrt(1.+x*x);
-	else if (x>7.)
-        result = 1. - nc(-x);
-	else {
-		result = 0.2316419;
-		double a[5] = {0.31938153,-0.356563782,1.781477937,-1.821255978,1.330274429};
-		result=1./(1+result*fabs(x));
-		result=1-ndf(x)*(result*(a[0]+result*(a[1]+result*(a[2]+result*(a[3]+result*a[4])))));
-		if (x<=0.) result=1.-result;
-	}
-	return result;
-}
-double fxy(double x, double y, double a, double b, double rho) {
-    double a_s;
-    double b_s;
-	double result;
-    a_s = a / sqrt(2 * (1 - rho * rho));
-    b_s = b / sqrt(2 * (1 - rho * rho));
-    result = exp(a_s * (2 * x - a_s) + b_s * (2 * y - b_s) + 2 * rho * (x - a_s) * (y - b_s));
-	return result;
-}
-double Ntwo(double a, double b, double rho) {
-    double aij[4]={0.325303, 0.4211071, 0.1334425, 0.006374323};
-    double bij[4]={0.1337764, 0.6243247, 1.3425378,2.2626645};
-    int i;
-    int j;
-    double result;
-    result = 0;
-    for(i=0;i<=3;i++) {
-        for(j=0;j<=3;j++) {
-          	result+=aij[i] * aij[j] * fxy(bij[i], bij[j], a, b, rho); 
-        }
-    }
-    result = result * sqrt(1 - rho * rho) / M_PI;
-return result;
-}
-double ND2(double a, double b, double rho)
-{
-    double rho1;
-    double rho2;
-    double denominator;
-    double result;
+// double sgn(double a) {
+// 	if (a>0)
+//         return 1.;
+// 	else if (a<0)
+//         return -1.;
+// 	else
+//         return 0.;
+// }
+// double ndf(double t) {
+// 	return 0.398942280401433*exp(-t*t/2);
+// }
+// double nc(double x) {
+// 	double result;
+// 	if (x<-7.)
+//         result = ndf(x)/sqrt(1.+x*x);
+// 	else if (x>7.)
+//         result = 1. - nc(-x);
+// 	else {
+// 		result = 0.2316419;
+// 		double a[5] = {0.31938153,-0.356563782,1.781477937,-1.821255978,1.330274429};
+// 		result=1./(1+result*fabs(x));
+// 		result=1-ndf(x)*(result*(a[0]+result*(a[1]+result*(a[2]+result*(a[3]+result*a[4])))));
+// 		if (x<=0.) result=1.-result;
+// 	}
+// 	return result;
+// }
+// double fxy(double x, double y, double a, double b, double rho) {
+//     double a_s;
+//     double b_s;
+// 	double result;
+//     a_s = a / sqrt(2 * (1 - rho * rho));
+//     b_s = b / sqrt(2 * (1 - rho * rho));
+//     result = exp(a_s * (2 * x - a_s) + b_s * (2 * y - b_s) + 2 * rho * (x - a_s) * (y - b_s));
+// 	return result;
+// }
+// double Ntwo(double a, double b, double rho) {
+//     double aij[4]={0.325303, 0.4211071, 0.1334425, 0.006374323};
+//     double bij[4]={0.1337764, 0.6243247, 1.3425378,2.2626645};
+//     int i;
+//     int j;
+//     double result;
+//     result = 0;
+//     for(i=0;i<=3;i++) {
+//         for(j=0;j<=3;j++) {
+//           	result+=aij[i] * aij[j] * fxy(bij[i], bij[j], a, b, rho); 
+//         }
+//     }
+//     result = result * sqrt(1 - rho * rho) / M_PI;
+// return result;
+// }
+// double ND2(double a, double b, double rho)
+// {
+//     double rho1;
+//     double rho2;
+//     double denominator;
+//     double result;
 
-    if (a * b * rho <= 0) {
-        if (a <= 0 && b <= 0 && rho <= 0)
-            result = Ntwo(a, b, rho);
-        else if (a <= 0 && b * rho >= 0)
-            result = nc(a) - Ntwo(a, -b, -rho);
-        else if (b <= 0 && rho >= 0)
-            result = nc(b) - Ntwo(-a, b, -rho);
-        else
-            result = nc(a) + nc(b) - 1 + Ntwo(-a, -b, rho);
-    }
-    else
-            {
-        denominator = sqrt(a * a - 2 * rho * a * b + b * b);
-        rho1 = (rho * a - b) * sgn(a) / denominator;
-        rho2 = (rho * b - a) * sgn(b) / denominator;
-        result = ND2(a, 0, rho1) + ND2(b, 0, rho2) - (1 - sgn(a) * sgn(b)) / 4;
-    }
-    if (result < 0) result = 0;
-    return result;
-}
+//     if (a * b * rho <= 0) {
+//         if (a <= 0 && b <= 0 && rho <= 0)
+//             result = Ntwo(a, b, rho);
+//         else if (a <= 0 && b * rho >= 0)
+//             result = nc(a) - Ntwo(a, -b, -rho);
+//         else if (b <= 0 && rho >= 0)
+//             result = nc(b) - Ntwo(-a, b, -rho);
+//         else
+//             result = nc(a) + nc(b) - 1 + Ntwo(-a, -b, rho);
+//     }
+//     else
+//             {
+//         denominator = sqrt(a * a - 2 * rho * a * b + b * b);
+//         rho1 = (rho * a - b) * sgn(a) / denominator;
+//         rho2 = (rho * b - a) * sgn(b) / denominator;
+//         result = ND2(a, 0, rho1) + ND2(b, 0, rho2) - (1 - sgn(a) * sgn(b)) / 4;
+//     }
+//     if (result < 0) result = 0;
+//     return result;
+// }
 
 
-double cdf_multi(double *lower, double *upper, double *mu, double cov) {
-	for (int i=0;i<2;i++) {
-		lower[i] = (lower[i]-mu[i])/sqrt(cov);
-		upper[i] = (upper[i]-mu[i])/sqrt(cov);
-	}
-	return ND2(lower[0], lower[1], 0.0)+ND2(upper[1], upper[1], 0.0)-ND2(upper[0], lower[1], 0.0)-ND2(lower[0], upper[1], 0.0);
+// double cdf_multi(double *lower, double *upper, double *mu, double cov) {
+// 	for (int i=0;i<2;i++) {
+// 		lower[i] = (lower[i]-mu[i])/sqrt(cov);
+// 		upper[i] = (upper[i]-mu[i])/sqrt(cov);
+// 	}
+// 	return bivnor(lower[0], lower[1], 0.0)+bivnor(upper[1], upper[1], 0.0)-bivnor(upper[0], lower[1], 0.0)-bivnor(lower[0], upper[1], 0.0);
 
-}
+// }
 void softmax(double *p, double *v, double beta, int n) {
 	double sum = 0.0;
 	double tmp[n];
@@ -175,13 +159,13 @@ double compute_Ppos(double x, double y, int pos, double varPos, double grain_) {
 	double stdev = sqrt(varPos);			
 	double lower [2] = {(x-meanxy[0])/stdev, (y-meanxy[1])/stdev};
 	double upper [2] = {(x+grain_-meanxy[0])/stdev, (y+grain_-meanxy[1])/stdev};
-	return ND2(upper[0], upper[1], 0.0)+ND2(lower[0],lower[1],0.0)-ND2(upper[0],lower[1],0.0)-ND2(lower[0], upper[1],0.0);
+	return bivnor(upper[0], upper[1], 0.0)+bivnor(lower[0],lower[1],0.0)-bivnor(upper[0],lower[1],0.0)-bivnor(lower[0], upper[1],0.0);
 }
 double compute_PGoal(double x, double y, double varGoal, double grain_) {
 	double stdev = sqrt(varGoal);
 	double lower [2] = {(x-(-0.235))/stdev, (y-1.193)/stdev};
 	double upper [2] = {(x+grain_-(-0.235))/stdev, (y+grain_-1.193)/stdev};
-	return ND2(upper[0], upper[1], 0.0)+ND2(lower[0],lower[1],0.0)-ND2(upper[0],lower[1],0.0)-ND2(lower[0], upper[1],0.0);
+	return bivnor(upper[0], upper[1], 0.0)+bivnor(lower[0],lower[1],0.0)-bivnor(upper[0],lower[1],0.0)-bivnor(lower[0], upper[1],0.0);
 }
 int in_Yaction(double xp, double yp, double xt, double yt, int p) {
 	double coeff14 = -0.5096;
