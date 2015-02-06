@@ -414,6 +414,17 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	int ind_pos2 [7] = {1,3,4,6,9,11,12};	
 	// double prefill_pgoal[n_case2];
 	// double prefill_ppos[n_case2];
+	for (int i=0;i<n_case2;i++) {
+		for (int j=0;j<3;j++) {
+			PG8[i][j] = 0.0;
+			PG2[i][j] = 0.0;
+			PG7[i][j] = 0.0;
+		}
+		for (int j=0;j<7;j++) {
+			PGI[i][0][j] = 0.0;
+			PGI[i][1][j] = 0.0;
+		}
+	}
 	///////////////////
 	const char* _data_dir = data_dir;	
 	// LOADING INFO.txt
