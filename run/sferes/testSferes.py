@@ -30,7 +30,7 @@ models = {'VMWM':VMWM(),
 		'Graph':Graph(),
 		'PI':PI()}
 
-nb_exp = 20
+nb_exp = 5
 data = {}
 for m in parameters.keys():
 	wrap = TYMaze(models[m])
@@ -41,7 +41,7 @@ for m in parameters.keys():
 			parameters[m][s].update({'length':3})	
 		data[m][s] = wrap.test(parameters[m][s], nb_exp, int(s.split("_")[1]))	
 		
-		# wrap.plot(data[s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
+		wrap.plot(data[m][s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
 
 
 with open("data_tmp2", 'rb') as handle:

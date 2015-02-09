@@ -557,11 +557,12 @@ class PI():
 		self.current_position = position
 		self.fill_PPos()
 		ind = self.ind[possible==1]
-		self.q_values = np.ones(len(ind))
+		self.q_values = np.ones(len(ind))		
 		if self.reward_found and len(ind) > 1:			
 			for i in xrange(len(ind)):
 				k = self.transition[(self.previous_position, self.current_position,ind[i])]
-				self.q_values[i] = np.sum((np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal), (0,1)))*(self.Ppos.flatten()))
+				tmp = np.sum(np.sum(self.mask[state][self.current_position][k]*np.atleast_3d(self.Pgoal),1), 0)				
+				self.q_values[i] = np.sum(tmp * self.Ppos.flatten())				
 		# print "In PI: ", self.q_values				
 		self.current_action = ind[self.sampleSoftMax(self.q_values)]
 		return actions[self.current_action]		
@@ -569,8 +570,9 @@ class PI():
 	def updateValue(self, reward, next_state):
 		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0		        
 		self.varPos += self.parameters['gamma']
-		self.previous_position = self.current_position
+		self.previous_position = self.current_position		
 		if r:
+			print self.varGoal, self.varPos
 			self.reward_found = True
 			self.varGoal = (1.0-self.parameters['eta'])*self.varGoal + self.parameters['eta']*self.varPos
 			self.fill_PGoal()

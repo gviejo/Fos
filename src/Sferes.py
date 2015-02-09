@@ -37,7 +37,8 @@ class maxlikelihood():
         self.directory = directory
         self.data = dict()
         self.models = dict({"VMWM":VMWM(),
-                            "Graph":Graph()})
+                            "Graph":Graph(),
+                            "PI":PI()})
         self.p_order = dict({'VMWM':['beta', 'gamma', 'eta'],
                             'Graph':['beta', 'gamma', 'eta'],
                             'PI':['beta','gamma','eta']})

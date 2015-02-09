@@ -13,9 +13,9 @@ from pylab import *
 
 
 
-parameters = {'beta': 10.405800000000001,
- 'eta': 0.9,
- 'gamma': 0.01}
+parameters = {'beta': 2.857478,
+ 'eta': 0.92657,
+ 'gamma': 0.000233738999977}
  
 model = PI(parameters)
 
@@ -24,7 +24,7 @@ wrap = TYMaze(model)
 world = wrap.world
 
 
-data = wrap.test(parameters, 10, 40)
+data = wrap.test(parameters, 1, 84)
 
 # wrap.guidage()
 

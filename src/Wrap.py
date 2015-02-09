@@ -137,8 +137,10 @@ class TYMaze():
 		self.model.__init__(parameters)
 		data = np.zeros((nb_exp, nb_trials))
 		for n in xrange(nb_exp):
+			print n
 			self.model.startExp()
 			for i in xrange(nb_trials):
+				# print i, self.model.varGoal
 				self.model.startTrial()	
 				self.reward_found = False		
 				self.world.startingPos()
@@ -180,8 +182,8 @@ class TYMaze():
 		data = {m:{s.split("_")[0]:data[m][s] for s in data[m].keys()} for m in data.keys()}
 		colors = {'Graph':'green','VMWM':'blue','PI':'gray'}
 		
-		for g in self.label.keys():		
-		# for g in ['late stage']:
+		# for g in self.label.keys():		
+		for g in ['late stage']:
 			fig = figure(figsize=(14,10))
 			for s,i in zip(self.label[g], xrange(len(self.label[g]))):
 				ax = fig.add_subplot(3,5,i+1)				
@@ -200,8 +202,8 @@ class TYMaze():
 			savefig(filename+"_group_"+g.replace(" ", "_")+"_test.pdf")
 
 
-		joining = [filename+"_group_"+g.replace(" ", "_")+"_test.pdf" for g in ['late stage', 'late stage approx', 'slow learner']]
-		os.system("pdftk "+" ".join(joining)+" cat output "+"../test/SFERES9_group_test_all_models.pdf")
+		# joining = [filename+"_group_"+g.replace(" ", "_")+"_test.pdf" for g in ['late stage', 'late stage approx', 'slow learner']]
+		# os.system("pdftk "+" ".join(joining)+" cat output "+"../test/SFERES9_group_test_all_models.pdf")
 			# os.system("evince "+filename+"_group_"+g+"_test.pdf")
 		# # probleme car tout les essais ne font pas la meme taille
 		# mean_all = np.zeros(84)
