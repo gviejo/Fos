@@ -282,7 +282,7 @@ class PI():
 		self.n_state = len(states)		
 		self.bounds = dict({"gamma":[0.0, 0.9999999999],
 							"beta":[0.0, 200.0],
-							"eta":[0.01, 0.1]})		
+							"eta":[0.001, 1.0]})		
 		# Values initialization
 		self.transition = {('1a','1b',0):1,
 							('1a','1b',2):2,
@@ -572,7 +572,7 @@ class PI():
 		self.varPos += self.parameters['gamma']
 		self.previous_position = self.current_position		
 		if r:
-			print self.varGoal, self.varPos
+			# print self.varGoal, self.varPos
 			self.reward_found = True
 			self.varGoal = (1.0-self.parameters['eta'])*self.varGoal + self.parameters['eta']*self.varPos
 			self.fill_PGoal()

@@ -172,7 +172,13 @@ class maxlikelihood():
         order = self.data.keys()
         self.winner = {m:[] for m in order}
         for s in subject:
-            win = np.argmax([self.best_log[m][s] for m in order])
+            tmp = []
+            for m in order:
+                if s in self.best_log[m].keys():
+                    tmp.append(self.best_log[m][s])
+                else:
+                    tmp.append(-10000.0)
+            win = np.argmax(tmp)
             self.winner[order[win]].append(s)
             
         # group of best model
@@ -198,14 +204,19 @@ class maxlikelihood():
                     line += " ".join([s for s in self.group[g][m]])
                     line += "\n"
                     f.write(line)
+                f.write("\n")
             f.write("\n")
             for m in self.best.keys():
                 f.write(m+"\n")
-                for s in self.best[m].keys():
-                    line="mouse="+s.split("_")[0]+"\t"
-                    line += " \t ".join([k+"="+str(self.best[m][s][k]) for k in self.p_order[m]])
-                    line += "\t\tloglikelihood = "+str(self.best_log[m][s])+"\n"
-                    f.write(line)
+                tmp = {i.split("_")[0]:i for i in self.best[m].keys()}
+                for g in ['late stage', 'late stage approx', 'slow learner']:
+                    for ss in self.label[g]:                        
+                        if ss in tmp.keys():
+                            s = tmp[ss]
+                            line=g+"\t mouse="+s.split("_")[0]+"\t"
+                            line += " \t ".join([k+"="+str(self.best[m][s][k]) for k in self.p_order[m]])
+                            line += "\t\tloglikelihood = "+str(self.best_log[m][s])+"\n"                            
+                            f.write(line)
                 f.write("\n")
 
         

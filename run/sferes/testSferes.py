@@ -8,6 +8,22 @@ from Models import *
 import cPickle as pickle
 from Sferes import *
 from optparse import OptionParser
+from multiprocessing import Pool, Process
+# -----------------------------------
+# Functions 
+# -----------------------------------
+def pool_test(arg):	
+	parameters = arg[0]
+	nb_exp = arg[1]				
+	data = {}
+	model = PI()
+	wrap = TYMaze(model)
+	
+	for s in parameters.keys():
+		data[s] = wrap.test(parameters[s], nb_exp, int(s.split("_")[1]))
+
+	return data
+
 
 # -----------------------------------
 # ARGUMENT MANAGER
@@ -30,9 +46,9 @@ models = {'VMWM':VMWM(),
 		'Graph':Graph(),
 		'PI':PI()}
 
-nb_exp = 5
+nb_exp = 100
 data = {}
-for m in parameters.keys():
+for m in ['VMWM', 'Graph']:
 	wrap = TYMaze(models[m])
 	data[m] = {}
 	for s in parameters[m].keys():
@@ -41,11 +57,23 @@ for m in parameters.keys():
 			parameters[m][s].update({'length':3})	
 		data[m][s] = wrap.test(parameters[m][s], nb_exp, int(s.split("_")[1]))	
 		
-		wrap.plot(data[m][s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
+		# wrap.plot(data[m][s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
 
+m = 'PI'
+wrap = TYMaze(models[m])
+data[m] = {}
+pool = Pool(6)
+tmp = np.array(parameters[m].keys()).reshape(6,5)
+args = [({s:parameters[m][s] for s in tmp[i]},nb_exp) for i in xrange(len(tmp))]
 
-with open("data_tmp2", 'rb') as handle:
-	data = pickle.load(handle)
+tmp = pool.map(pool_test, args)
+for i in xrange(len(tmp)):
+	for s in tmp[i].keys():
+		data[m][s] = tmp[i][s]
+
+with open("data_tmp_SFERES9_bis_test", 'wb') as handle:
+	pickle.dump(data, handle)
+
 wrap.plotall(data, latency, "../test/"+options.input.split("_")[0])
 
 os.system("evince ../test/SFERES9_group_test_all_models.pdf")

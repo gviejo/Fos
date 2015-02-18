@@ -12,7 +12,8 @@ import os,sys
 from world import World
 from matplotlib import *
 if os.uname()[1] in ['atlantis', 'paradise']:
-   from pylab import *    
+   	from pylab import *    
+from Models import *
 
 
 class TYMaze():
@@ -136,8 +137,7 @@ class TYMaze():
 	def test(self, parameters, nb_exp, nb_trials):
 		self.model.__init__(parameters)
 		data = np.zeros((nb_exp, nb_trials))
-		for n in xrange(nb_exp):
-			print n
+		for n in xrange(nb_exp):			
 			self.model.startExp()
 			for i in xrange(nb_trials):
 				# print i, self.model.varGoal
@@ -160,6 +160,42 @@ class TYMaze():
 					self.guidage()
 		return data*1.05
 
+	# def pooltest(self, arg):
+	# 	parameters = arg[0]
+	# 	nb_exp = arg[1]
+	# 	data = {}
+	# 	model = PI()
+	# 	world = World("TYM")
+	# 	reward_found = False
+	# 	for s in parameters.keys():
+	# 		model.__init__(parameters[s])
+	# 		nb_trials = int(s.split("_")[1])
+	# 		tmp = np.zeros((nb_exp, nb_trials))
+	# 		for n in xrange(nb_exp):			
+	# 			model.startExp()
+	# 			for i in xrange(nb_trials):				
+	# 				model.startTrial()	
+	# 				reward_found = False		
+	# 				world.startingPos()
+	# 				state = self.pos_to_state[world.mousePos]				
+	# 				for j in xrange(self.nb_steps_max):					
+	# 					possible = world.readPathwaysALaLouche()
+	# 					action = model.chooseAction(world.mousePos, state, possible)
+	# 					world.moveALaLouche(self.actions.index(action))
+	# 					state = self.pos_to_state[world.mousePos]					
+	# 					reward = world.readRew()
+	# 					model.updateValue(reward, state)
+	# 					if reward:
+	# 						reward_found = True
+	# 						break
+	# 				tmp[n,i] = j
+	# 				if not reward_found:
+	# 					self.guidage()
+	# 		tmp *= 1.05
+	# 	data[s] = tmp
+	# 	return data
+
+
 	def plot(self, data, mouse, parameters, latency, file_name):
 		figure() # for each model all subject            
 		mean_time = np.mean(data, 0)
@@ -180,10 +216,10 @@ class TYMaze():
 		rcParams['ytick.labelsize'] = 8
 
 		data = {m:{s.split("_")[0]:data[m][s] for s in data[m].keys()} for m in data.keys()}
-		colors = {'Graph':'green','VMWM':'blue','PI':'gray'}
+		colors = {'Graph':'green','VMWM':'blue','PI':'greenyellow'}
 		
-		# for g in self.label.keys():		
-		for g in ['late stage']:
+		for g in self.label.keys():		
+		# for g in ['late stage']:
 			fig = figure(figsize=(14,10))
 			for s,i in zip(self.label[g], xrange(len(self.label[g]))):
 				ax = fig.add_subplot(3,5,i+1)				
@@ -201,9 +237,9 @@ class TYMaze():
 			tight_layout()
 			savefig(filename+"_group_"+g.replace(" ", "_")+"_test.pdf")
 
+		joining = [filename+"_group_"+g.replace(" ", "_")+"_test.pdf" for g in ['late stage', 'late stage approx', 'slow learner']]
+		os.system("pdftk "+" ".join(joining)+" cat output "+"../test/SFERES9_group_test_all_models.pdf")
 
-		# joining = [filename+"_group_"+g.replace(" ", "_")+"_test.pdf" for g in ['late stage', 'late stage approx', 'slow learner']]
-		# os.system("pdftk "+" ".join(joining)+" cat output "+"../test/SFERES9_group_test_all_models.pdf")
 			# os.system("evince "+filename+"_group_"+g+"_test.pdf")
 		# # probleme car tout les essais ne font pas la meme taille
 		# mean_all = np.zeros(84)
