@@ -363,8 +363,9 @@ void sferes_call(double * fit, const int N, const char* data_dir, double beta_, 
 	///////////////////
 	// parameters
 	double beta=0.0+beta_*(200.0-0.0);
-	double gamma=0.0+gamma_*(0.999999999-0.0);	
-	double eta=0.001+(1.0-0.001)*eta_;
+	// double gamma=0.0+gamma_*(0.999999999-0.0);	
+	double gamma=0.0+gamma_*(5.0-0.0);	
+	double eta=0.0000001+(1.0-0.0000001)*eta_;
 
 	// std::cout << beta << " " << gamma << " " << eta << std::endl;
 	const int n_state = 3;
