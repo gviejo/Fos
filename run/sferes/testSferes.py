@@ -48,33 +48,37 @@ models = {'VMWM':VMWM(),
 
 nb_exp = 100
 data = {}
-for m in ['VMWM', 'Graph']:
+# for m in ['VMWM', 'Graph']:
+for m in ['VMWM']:
 	wrap = TYMaze(models[m])
 	data[m] = {}
 	for s in parameters[m].keys():
 		print m, s
-		if m == 'VMWM' and 'length' not in parameters[m][s].keys():			
-			parameters[m][s].update({'length':3})	
+		if m == 'VMWM' and 'length' not in parameters[m][s].keys():
+			parameters[m][s].update({'length':0})	
+			print "Setting length to ", parameters[m][s]['length']			
+			
 		data[m][s] = wrap.test(parameters[m][s], nb_exp, int(s.split("_")[1]))	
 		
 		# wrap.plot(data[m][s], s, parameters[m][s], latency[s.split("_")[0]], "../test/"+options.input.split("_")[0]+"_"+s+".pdf")
 
-m = 'PI'
-wrap = TYMaze(models[m])
-data[m] = {}
-pool = Pool(6)
-tmp = np.array(parameters[m].keys()).reshape(6,5)
-args = [({s:parameters[m][s] for s in tmp[i]},nb_exp) for i in xrange(len(tmp))]
+# m = 'PI'
+# wrap = TYMaze(models[m])
+# data[m] = {}
+# pool = Pool(6)
+# tmp = np.array(parameters[m].keys()).reshape(6,5)
+# args = [({s:parameters[m][s] for s in tmp[i]},nb_exp) for i in xrange(len(tmp))]
 
-tmp = pool.map(pool_test, args)
-for i in xrange(len(tmp)):
-	for s in tmp[i].keys():
-		data[m][s] = tmp[i][s]
+# tmp = pool.map(pool_test, args)
+# for i in xrange(len(tmp)):
+# 	for s in tmp[i].keys():
+# 		data[m][s] = tmp[i][s]
 
-with open("data_tmp_SFERES9_bis_test", 'wb') as handle:
-	pickle.dump(data, handle)
-
+# with open("data_tmp", 'rb') as handle:
+# 	data = pickle.load(handle)
 wrap.plotall(data, latency, "../test/"+options.input.split("_")[0])
 
-os.system("evince ../test/SFERES9_group_test_all_models.pdf")
+
+
+# os.system("evince ../test/_group_test_all_models.pdf")
 

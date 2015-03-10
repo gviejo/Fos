@@ -39,7 +39,7 @@ class maxlikelihood():
         self.models = dict({"VMWM":VMWM(),
                             "Graph":Graph(),
                             "PI":PI()})
-        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta'],
+        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length'],
                             'Graph':['beta', 'gamma', 'eta'],
                             'PI':['beta','gamma','eta']})
         # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})        

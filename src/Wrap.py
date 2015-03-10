@@ -68,32 +68,57 @@ class TYMaze():
 		np.seterr(all='ignore')
 		nb_point = data['info']['nb_point']
 		nb_trial = data['info']['nb_trial']
-		loglike = np.zeros(nb_point)
+		self.loglike = np.zeros(nb_point)
+		self.cumloglike = np.zeros(nb_trial)
 		self.model.startExp()
 		self.world.startingPos()
 		for i in xrange(nb_trial):
-		# for i in xrange(1):
 			self.model.startTrial()
-			# tmp = 0.0
+			tmp = 0.0
 			for j in xrange(len(data[i]['action'])):								
 				pa = self.model.computeValue(data[i]['pos'][j], data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
 				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])
-				loglike[data[i]['ind'][j]] = np.log(pa)
+				self.loglike[data[i]['ind'][j]] = np.log(pa)
+				tmp+=np.log(pa)
 			if data[i]['reward'][-1] == 0:
 				self.guidage()
-			
+			self.cumloglike[i] = tmp/float(len(data[i]['action']))
 			# print i, tmp
 			# print tmp
 		# for i in xrange(900):
 		# 	print self.model.xy[i], self.model.Pgoal.flatten()[i]
 
 
-		llh = np.sum(loglike)
+		llh = np.sum(self.loglike)
 		if llh==0 or np.isnan(llh) or np.isinf(llh):
 			return -100000
 		else:
-			return np.sum(loglike)
+			return np.sum(self.loglike)
 		
+	def sferes_norm(self, data):
+		np.seterr(all='ignore')
+		nb_point = data['info']['nb_point']
+		nb_trial = data['info']['nb_trial']
+		self.loglike = np.zeros(nb_trial)		
+		self.model.startExp()
+		self.world.startingPos()
+		for i in xrange(nb_trial):
+			self.model.startTrial()
+			tmp = 0.0
+			for j in xrange(len(data[i]['action'])):								
+				pa = self.model.computeValue(data[i]['pos'][j], data[i]['state'][j], data[i]['action'][j], data[i]['possible'][j])								
+				self.model.updateValue(data[i]['reward'][j], data[i]['state'][j+1])			
+				tmp+=np.log(pa)
+			if data[i]['reward'][-1] == 0:
+				self.guidage()
+			self.loglike[i] = tmp/float(len(data[i]['action']))
+
+		llh = np.sum(self.loglike)
+		if llh==0 or np.isnan(llh) or np.isinf(llh):
+			return -100000
+		else:
+			return np.sum(self.loglike)		
+
 	def sferes2(self, data, latency):
 		np.seterr(all='ignore')
 		nb_point = data['info']['nb_point']
@@ -147,42 +172,6 @@ class TYMaze():
 					self.guidage()
 		return data*1.05
 
-	# def pooltest(self, arg):
-	# 	parameters = arg[0]
-	# 	nb_exp = arg[1]
-	# 	data = {}
-	# 	model = PI()
-	# 	world = World("TYM")
-	# 	reward_found = False
-	# 	for s in parameters.keys():
-	# 		model.__init__(parameters[s])
-	# 		nb_trials = int(s.split("_")[1])
-	# 		tmp = np.zeros((nb_exp, nb_trials))
-	# 		for n in xrange(nb_exp):			
-	# 			model.startExp()
-	# 			for i in xrange(nb_trials):				
-	# 				model.startTrial()	
-	# 				reward_found = False		
-	# 				world.startingPos()
-	# 				state = self.pos_to_state[world.mousePos]				
-	# 				for j in xrange(self.nb_steps_max):					
-	# 					possible = world.readPathwaysALaLouche()
-	# 					action = model.chooseAction(world.mousePos, state, possible)
-	# 					world.moveALaLouche(self.actions.index(action))
-	# 					state = self.pos_to_state[world.mousePos]					
-	# 					reward = world.readRew()
-	# 					model.updateValue(reward, state)
-	# 					if reward:
-	# 						reward_found = True
-	# 						break
-	# 				tmp[n,i] = j
-	# 				if not reward_found:
-	# 					self.guidage()
-	# 		tmp *= 1.05
-	# 	data[s] = tmp
-	# 	return data
-
-
 	def plot(self, data, mouse, parameters, latency, file_name):
 		figure() # for each model all subject            
 		mean_time = np.mean(data, 0)
@@ -225,7 +214,7 @@ class TYMaze():
 			savefig(filename+"_group_"+g.replace(" ", "_")+"_test.pdf")
 
 		joining = [filename+"_group_"+g.replace(" ", "_")+"_test.pdf" for g in ['late stage', 'late stage approx', 'slow learner']]
-		os.system("pdftk "+" ".join(joining)+" cat output "+"../test/SFERES9_group_test_all_models.pdf")
+		os.system("pdftk "+" ".join(joining)+" cat output "+"../test/"+filename+"_group_test_all_models.pdf")
 
 			# os.system("evince "+filename+"_group_"+g+"_test.pdf")
 		# # probleme car tout les essais ne font pas la meme taille
