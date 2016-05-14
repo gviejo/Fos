@@ -25,7 +25,7 @@ Folders/Files
     - *run/sferes/convert_to_pickle.py* : Convert original text data to pickle data for gain of speed processing
     - *run/sferes/logTest.py* : Test files for log-optimisation
     - *run/sferes/main.py* : Test files for parameters
-    - *run/sferes/sferes_model_name_of_the_mouse.py : Examples of files generated when lauching job on the cluster and called by sferes2 to compute log-likelihood
+    - *run/sferes/sferes_model_name-of-the-mouse.py* : Examples of files generated when lauching job on the cluster and called by sferes2 to compute log-likelihood
     - *run/sferes/submit_job* : To submit python job on the cluster for individual parameters optimisation
     - *run/sferes/testSferes.py* : Take pickle parameters set and test it to generate learning curves.
     
