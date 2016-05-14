@@ -17,10 +17,10 @@ import mmap
 import numpy as np
 sys.path.append("../../src")
 from Models import *
-if os.uname()[1] in ['atlantis', 'paradise']:
-    from multiprocessing import Pool, Process
-    from pylab import *
-    import cPickle as pickle
+#if os.uname()[1] in ['atlantis', 'paradise']:
+#    from multiprocessing import Pool, Process
+#    from pylab import *
+#    import cPickle as pickle
 
 
 def unwrap_self_load_data(arg, **kwarg):
@@ -38,11 +38,12 @@ class maxlikelihood():
         self.data = dict()
         self.models = dict({"VMWM":VMWM(),
                             "Graph":Graph(),
-                            "PI":PI()})
-        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length'],
+                            "PI":PI(),
+                            "VMWMDELAY":VMWMDELAY()})
+        self.p_order = dict({'VMWM':['beta', 'gamma', 'eta'],
                             'Graph':['beta', 'gamma', 'eta'],
-                            'PI':['beta','gamma','eta']})
-        # self.p_order = dict({'VMWM':['beta', 'gamma', 'eta', 'length']})        
+                            'PI':['beta','gamma','eta'],
+                            'VMWMDELAY':['beta','gamma', 'eta', 'length','start']})        
         self.best = dict() # the best parameters set for each mouse        
         self.best_log = dict()
         self.upper_front = dict() # the fitness max at each generation for each mouse and each model 
@@ -64,7 +65,7 @@ class maxlikelihood():
         if len(model_in_folders) == 0:
             sys.exit("No model found in directory "+self.directory)
         for m in model_in_folders:
-            print("\t Modele :"+m)
+            print("\t Model :"+m)
             self.data[m] = dict()
             lrun = os.listdir(self.directory+"/"+m)
             order = self.p_order[m]
@@ -80,7 +81,10 @@ class maxlikelihood():
                     self.data[m][s] = dict()
                     self.data[m][s][n] = np.genfromtxt(self.directory+"/"+m+"/"+r)                                
                 for p in order:
-                    self.data[m][s][n][:,order.index(p)+4] = scale[p][0]+self.data[m][s][n][:,order.index(p)+4]*(scale[p][1]-scale[p][0])
+                    if m == 'VMWMDELAY' and p=='start':
+                        self.data[m][s][n][:,order.index(p)+4] = self.data[m][s][n][:,order.index(p)+4]
+                    else:
+                        self.data[m][s][n][:,order.index(p)+4] = scale[p][0]+self.data[m][s][n][:,order.index(p)+4]*(scale[p][1]-scale[p][0])
         for m in self.data.iterkeys():
             for s in self.data[m].iterkeys():
                 tmp = []

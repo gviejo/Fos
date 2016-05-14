@@ -50,6 +50,7 @@ nb_exp = 100
 data = {}
 # for m in ['VMWM', 'Graph']:
 for m in ['VMWM']:
+#for m in models.keys():
 	wrap = TYMaze(models[m])
 	data[m] = {}
 	for s in parameters[m].keys():
@@ -74,10 +75,11 @@ for m in ['VMWM']:
 # 	for s in tmp[i].keys():
 # 		data[m][s] = tmp[i][s]
 
-# with open("data_tmp", 'rb') as handle:
-# 	data = pickle.load(handle)
-wrap.plotall(data, latency, "../test/"+options.input.split("_")[0])
-
+#with open("data_tmp", 'rb') as handle:
+ #	data = pickle.load(handle)
+#wrap.plotall(data, latency, "../test/"+options.input.split("_")[0])
+with open("data_SFERES11", 'wb') as handle:
+	pickle.dump(data, handle)
 
 
 # os.system("evince ../test/_group_test_all_models.pdf")

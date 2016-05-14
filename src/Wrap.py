@@ -10,9 +10,9 @@ For guidage, reward delivery, maze structure, ...
 import numpy as np
 import os,sys
 from world import World
-from matplotlib import *
-if os.uname()[1] in ['atlantis', 'paradise']:
-   	from pylab import *    
+#from matplotlib import *
+#if os.uname()[1] in ['atlantis', 'paradise']:
+#   	from pylab import *    
 from Models import *
 
 
